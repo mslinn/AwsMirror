@@ -26,6 +26,7 @@ class Upload(args: Array[String]) {
             val s3 = new S3(credentials.accessKey, credentials.secretKey)
             if (!s3.listBuckets().contains(s3File.bucketName)) {
               println("Error: AWS account %s does not define bucket %s".format(s3File.accountName, s3File.bucketName))
+              System.exit(-1)
             }
             println("todo upload")
         }
