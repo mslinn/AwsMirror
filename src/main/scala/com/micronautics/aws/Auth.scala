@@ -36,8 +36,6 @@ class Auth(args: Array[String]) {
   }
 
   def auth(action: AuthAction, accountName: String=null): Unit = {
-    def fileContents = Source.fromFile(credentialPath.path).mkString
-
     action match {
       case `add` =>
         if (accountName==null) {

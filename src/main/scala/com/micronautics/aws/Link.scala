@@ -36,7 +36,7 @@ class Link(args: Array[String]) {
 
     case 3 =>
       // Modify .s3 file in current directory or parent by setting accountName and bucketName, or create in current directory
-      findS3File(".s3", new File(System.getProperty("user.dir"))) match {
+      findS3File() match {
         case None => // create .s3 file in current directory
           val newS3File = S3File(args(1), args(2), None) // set to never synched
           val synched = newS3File.lastSyncOption match {
@@ -70,18 +70,5 @@ class Link(args: Array[String]) {
     case _ =>
       println("Error: Too many arguments provided for link")
       help
-  }
-
-  def findS3File(fileName: String, directory: File): Option[File] = {
-    val file = new File(directory, fileName)
-    if (file.exists()) {
-      Some(file)
-    } else {
-      val parent = directory.getParent
-      if (parent==null)
-        None
-      else
-        findS3File(fileName, new File(parent))
-    }
   }
 }

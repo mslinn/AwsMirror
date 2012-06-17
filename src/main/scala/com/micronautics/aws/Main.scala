@@ -2,6 +2,8 @@ package com.micronautics.aws
 
 import scalax.file.Path
 import java.io.File
+import com.codahale.jerkson.Json._
+import io.Source
 
 object Main extends App {
   def credentialPath: Path = Path(new File(sys.env("HOME"))) / ".aws"
@@ -61,6 +63,37 @@ object Main extends App {
         |                          -d delete files on AWS that are not in the local directory, after files are uploaded
       """.stripMargin)
     System.exit(0)
+  }
+
+  def findS3File(fileName: String=".s3", directory: File=new File(System.getProperty("user.dir"))): Option[File] = {
+    val file = new File(directory, fileName)
+    if (file.exists()) {
+      Some(file)
+    } else {
+      val parent = directory.getParent
+      if (parent==null)
+        None
+      else
+        findS3File(fileName, new File(parent))
+    }
+  }
+
+  def fileContents = Source.fromFile(credentialPath.path).mkString
+
+  def getAuthentication(accountName: String): Option[Credentials] = {
+    if (credentialPath.exists) {
+      val creds = AllCredentials(parse[Array[Credentials]](fileContents)).flatMap { cred =>
+        if (cred.awsAccountName==accountName)
+          Some(cred)
+        else
+          None
+      }
+      if (creds.length==0)
+        None
+      else
+        Some(creds.head)
+    } else
+      None
   }
 
   def prompt(msg: String, defaultValue: String=null): String = {
