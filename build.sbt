@@ -27,9 +27,10 @@ libraryDependencies ++= Seq(
   "commons-io"                    %  "commons-io"          % "2.3"    withSources(),
   "com.codahale"                  %  "jerkson_2.9.1"       % "0.5.0",
   "junit"                         %  "junit"               % "4.10"   % "test" withSources(),
-  "org.scribe"                    %  "scribe"              % "1.3.1"  withSources(),
   "com.github.scala-incubator.io" %  "scala-io-core_2.9.1" % "0.4.0"  withSources(),
-  "com.github.scala-incubator.io" %  "scala-io-file_2.9.1" % "0.4.0"  withSources()
+  "com.github.scala-incubator.io" %  "scala-io-file_2.9.1" % "0.4.0"  withSources(),
+  "org.scala-tools.time"          %  "time_2.9.1"          % "0.5",
+  "org.scribe"                    %  "scribe"              % "1.3.1"  withSources()
 )
 
 //seq(assemblySettings: _*)

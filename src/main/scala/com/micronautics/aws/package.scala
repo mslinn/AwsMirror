@@ -2,6 +2,7 @@ package com.micronautics.aws
 
 import collection.mutable.MutableList
 import scala.Array
+import org.joda.time.DateTime
 
 case class Credentials(awsAccountName: String, accessKey: String, secretKey: String)
 
@@ -31,3 +32,5 @@ object AuthAction extends Enumeration {
    type AuthAction = Value
    val add, delete, list, modify = Value
  }
+
+case class S3File(accountName: String, bucketName: String, lastSyncOption: Option[DateTime])

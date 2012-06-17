@@ -1,4 +1,6 @@
 target
+.s3
+.aws
 tomcat.8080
 .classpath
 *~
