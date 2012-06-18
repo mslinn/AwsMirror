@@ -28,7 +28,7 @@ class Upload(args: Array[String]) {
               println("Error: AWS account %s does not define bucket %s".format(s3File.accountName, s3File.bucketName))
               System.exit(-1)
             }
-            println("todo upload")
+            new Uploader(credentials, s3File.bucketName).upload(file.getParentFile)
         }
     }
 
