@@ -13,8 +13,6 @@ class AllCredentials extends MutableList[Credentials] {
   }
 
   def defines(accountName: String): Boolean = groupBy(_.awsAccountName).keySet.contains(accountName)
-
-  //def find(accountName: String): Option[Credentials] = groupBy(_.awsAccountName).get(accountName)
 }
 
 object AllCredentials {
@@ -30,7 +28,7 @@ object AWS {
 
 object AuthAction extends Enumeration {
    type AuthAction = Value
-   val add, delete, list, modify = Value
+   val add, delete, download, list, modify = Value
  }
 
 case class S3File(accountName: String, bucketName: String, lastSyncOption: Option[DateTime])

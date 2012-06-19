@@ -22,6 +22,9 @@ object Main extends App {
       case "delete" =>
         new Delete(args)
 
+      case "download" =>
+        new Download(args)
+
       case "empty" =>
         new Empty(args)
 
@@ -53,13 +56,14 @@ object Main extends App {
         |                          modify - accountName modify authentication for specified AWS account name
         |    create [bucketName]   create specified bucket, or bucket specified in relevent .s3 file
         |    delete [bucketName]   delete specified bucket, or bucket specified in relevent .s3 file
+        |    download              download bucket specified in relevent .s3 file to the entire tree
         |    empty [bucketName]    empty specified bucket, or bucket specified in relevent .s3 file
         |    help                  print this message and exit
         |    link [accountName bucketName]
         |                          If accountName and bucketName are not specified, display contents of .s3 file in current directory or a parent directory.
         |                          Otherwise create or modify .s3 file in current directory by setting accountName and bucketName
         |    sync                  sync directory tree to specified bucket
-        |    upload                upload directory tree to bucket specified in relevent .s3 file
+        |    upload                upload entire directory tree to bucket specified in relevent .s3 file
         |                          -d delete files on AWS that are not in the local directory, after files are uploaded
       """.stripMargin)
     System.exit(0)

@@ -111,7 +111,15 @@ public class S3 {
         return result.toArray(new String[result.size()]);
     }
 
-    public S3ObjectSummary getObjectData(String bucketName, String prefix) {
+    public LinkedList<S3ObjectSummary> getAllObjectData(String bucketName, String prefix) {
+        LinkedList<S3ObjectSummary> result = new LinkedList<S3ObjectSummary>();
+        ObjectListing objectListing = s3.listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix));
+        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
+            result.add(objectSummary);
+        return result;
+    }
+
+    public S3ObjectSummary getOneObjectData(String bucketName, String prefix) {
         ObjectListing objectListing = s3.listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix));
         for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
             if (objectSummary.getKey().compareTo(prefix)==0)

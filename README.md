@@ -5,6 +5,14 @@
  2. Storing content on AWS S3 (CDN).
  3. AWS S3 serves a static web site from the content.
 
+AWS does not translate most paths; files in the root must be addressed in links with a leading slash.
+This program stores each file name (referred to by AWS as a key) with a leading slash.
+For example, assuming that the default file name is `index.html`,
+`http://domain.com` and `http://domain.com/` are translated to `http://domain.com/index.html`
+
+The contents of that `index.html` file must prefix each URL with a slash, even if they are in the root directory.
+To set up Dreamweaver to do that use the menu ''Site / Manage Sites / Advanced / Local Info'' and select ''Links relative to Site root''.
+
 ## To Run ##
 
 ````
