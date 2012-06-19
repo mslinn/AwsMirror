@@ -7,6 +7,11 @@ import scalax.file.Path
 import scalax.io.Codec
 
 class Upload(args: Array[String]) {
+  if (!credentialPath.exists) {
+    println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.path))
+    System.exit(-1)
+  }
+
   args.length match {
     case 1 =>
     // Upload entire tree to bucket specified in .s3 file in this directory or parent;

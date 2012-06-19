@@ -9,6 +9,11 @@ import org.joda.time.format.DateTimeFormat
 import scalax.file.Path
 
 class Link(args: Array[String]) {
+  if (!credentialPath.exists) {
+    println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.path))
+    System.exit(-1)
+  }
+
   private val dtFormat = DateTimeFormat.forPattern("HH:mm:ss 'on' mmm, dd YYYY")
 
   args.length match {

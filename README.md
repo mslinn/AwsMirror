@@ -26,8 +26,9 @@ Usage: aws <action>
     delete [bucketName]   delete specified bucket, or bucket specified in relevent .s3 file
     empty [bucketName]    empty specified bucket, or bucket specified in relevent .s3 file
     help                  print this message and exit
-    link [bucketName]     If bucketName is not specified, display contents of .s3 file in current directory or a parent directory.
-                          Otherwise create or modify .s3 file in current directory by setting bucketName
+    link [accountName bucketName]
+                          If accountName and bucketName are not specified, display contents of .s3 file in current directory or a parent directory.
+                          Otherwise create or modify .s3 file in current directory by setting accountName and bucketName
     sync                  sync directory tree to specified bucket
     upload                upload directory tree to bucket specified in relevent .s3 file
                           -d delete files on AWS that are not in the local directory, after files are uploaded
