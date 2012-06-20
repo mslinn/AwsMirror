@@ -25,7 +25,7 @@ class Downloader(credentials: Credentials, bucketName: String) {
           if (!node.getKey.endsWith("$folder$")) {
             println("Downloading " + outFile + ", last modified " + node.getLastModified() + ", " + node.getSize + " bytes.")
             FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
-            outFile.setLastModified(node.getLastModified());
+            outFile.setLastModified(node.getLastModified().getTime);
           }
         }
       } catch {
