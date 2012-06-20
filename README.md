@@ -45,10 +45,12 @@ Usage: aws <action>
                           Otherwise create or modify .s3 file in current directory by setting accountName and bucketName
     sync                  sync directory tree to specified bucket
     upload                upload directory tree to bucket specified in relevent .s3 file
-                          -d delete files on AWS that are not in the local directory, after files are uploaded
 ````
 
-You first nee to run the program with the `auth` option so it can create a file in your home directory called `.aws` to
+The `upload` and `sync` commands continue uploading changed files until you press Control-C or Command-C
+(works on Linux, Windows and Mac).
+
+You first need to run the program with the `auth` option so it can create a file in your home directory called `.aws` to
 hold your AWS access key and your AWS secret key.
 You can store multiple authentications for each of the AWS accounts that you work with.
 
@@ -58,8 +60,8 @@ You can store multiple authentications for each of the AWS accounts that you wor
   "secretKey":"BLAHBLAHBLAHBLAHBLAHBLAH"}]
 ````
 
-## Working with aws ##
-The `.aws` file in your home directory contains authentication information, stored as JSON, for all AWS accounts
-that you work with.
+This program requires Java 7 or later.
+
+## Working With AWS S3 Buckets ##
 An `.s3` file defines the root of a source directory tree, and stores the account and bucket that the source directory
 tree is associated with. It also stores the timestamp of the last sync. Its format is also JSON.

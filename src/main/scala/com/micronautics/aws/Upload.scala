@@ -5,6 +5,7 @@ import com.codahale.jerkson.Json._
 import scala.Some
 import scalax.file.Path
 import scalax.io.Codec
+import java.nio.file.Paths
 
 class Upload(args: Array[String]) {
   if (!credentialPath.exists) {
@@ -34,6 +35,10 @@ class Upload(args: Array[String]) {
               System.exit(-1)
             }
             new Uploader(credentials, s3File.bucketName).upload(file.getParentFile)
+
+            // continue uploading until Control-C
+            val watchPath = Paths.get(file.getParent)
+            new DirectoryWatcher(watchPath).watch()
         }
     }
 

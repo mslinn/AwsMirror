@@ -4,9 +4,11 @@ import scalax.file.Path
 import java.io.File
 import com.codahale.jerkson.Json._
 import io.Source
+import akka.actor.ActorSystem
 
 object Main extends App {
   def credentialPath: Path = Path(new File(sys.env("HOME"))) / ".aws"
+  implicit val system = ActorSystem()
 
   override def main(args: Array[String]) {
     if (args.length==0)

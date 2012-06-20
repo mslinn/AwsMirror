@@ -11,6 +11,8 @@ scalaVersion := "2.9.2"
 
 scalacOptions ++= Seq("-deprecation")
 
+javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
+
 scalacOptions in (Compile, doc) <++= baseDirectory.map {
   (bd: File) => Seq[String](
      "-sourcepath", bd.getAbsolutePath,
