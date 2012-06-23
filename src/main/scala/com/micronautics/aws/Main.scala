@@ -6,11 +6,13 @@ import com.codahale.jerkson.Json._
 import io.Source
 import akka.actor.ActorSystem
 import scalax.io.Codec
+import org.joda.time.format.DateTimeFormat
 
 object Main extends App {
   def credentialPath: Path = Path(new File(sys.env("HOME"))) / ".aws"
   implicit val system = ActorSystem()
   var s3Option: Option[S3] = None
+  val dtFormat = DateTimeFormat.forPattern("HH:mm:ss 'on' mmm, dd YYYY")
 
   override def main(args: Array[String]) {
     if (args.length==0)
@@ -182,5 +184,27 @@ object Main extends App {
       defaultValue
     else
       userInput
+  }
+
+  def writeS3(contents: String): Unit = {
+    val s3File = new File(System.getProperty("user.dir"), ".s3")
+    val s3Path = Path(s3File)
+    s3Path.write(contents)
+  }
+
+  /**
+    * Write `.s3` file
+    * @return String indicating when last synced, if ever synced
+    */
+  def writeS3(newS3File: S3File): String = {
+    val synced = newS3File.lastSyncOption match {
+      case None =>
+        "never synced"
+
+      case Some(dateTime) =>
+        "last synced " + dtFormat.print(dateTime)
+    }
+    writeS3(generate(newS3File))
+    synced
   }
 }

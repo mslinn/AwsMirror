@@ -36,14 +36,36 @@ class Create(args: Array[String]) {
       }
 
     case 3 => // create accountName bucketName
-      // todo error if bucket exists
-      // todo else create bucket
-      // todo if .s3 file exists in current directory or parent, modify it by setting bucketName
-      // todo else tell user that they could run link command
+      // Error if bucket exists else create bucket
+      // if .s3 file exists in current directory or parent, modify it by setting bucketName
+      // else tell user that they could run link command
+      findS3File() match {
+        case None =>
+          val accountName = args(1)
+          val bucketName = args(2)
+          getAuthentication(accountName) match {
+            case None =>
+              println("Error: Authentication credentials not found in %s; try the link subcommand".format(credentialPath))
+              System.exit(-4)
+
+            case Some(credentials) =>
+              val s3 = new S3(credentials.accessKey, credentials.secretKey)
+              try {
+                s3.createBucket(bucketName)
+                writeS3(S3File(accountName, bucketName, None))
+              } catch {
+                case ex =>
+                  println(ex.getMessage)
+              }
+          }
+
+        case Some(file) =>
+          println("%s file found; run this command but do not specify the awsAccountName and bucketName, or move to another directory".format(file.getCanonicalPath))
+          System.exit(-2)
+      }
 
     case _ =>
       println("Error: Too many arguments provided for link")
       help
   }
-
 }
