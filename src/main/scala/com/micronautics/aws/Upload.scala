@@ -22,7 +22,7 @@ class Upload(args: Array[String]) {
         println("Error: This directory is not linked with an AWS S3 bucket.\nUse the link subcommand to establish the link.")
 
       case Some(file) =>
-        val s3File = parse[S3File](Path(file).slurpString(Codec.UTF8))
+        val s3File = parseS3File(file) //parse[S3File](Path(file).slurpString(Codec.UTF8))
         getAuthentication(s3File.accountName) match {
           case None =>
             println("Error: %s was not found".format(file.getCanonicalPath))

@@ -5,10 +5,12 @@ import java.io.File
 import com.codahale.jerkson.Json._
 import io.Source
 import akka.actor.ActorSystem
+import scalax.io.Codec
 
 object Main extends App {
   def credentialPath: Path = Path(new File(sys.env("HOME"))) / ".aws"
   implicit val system = ActorSystem()
+  var s3Option: Option[S3] = None
 
   override def main(args: Array[String]) {
     if (args.length==0)
@@ -48,11 +50,21 @@ object Main extends App {
     }
   }
 
+  /** @return `.aws` contents as a String */
+  def credentialFileContents: Option[String] = {
+    val file = new File(credentialPath.path)
+    if (file.exists)
+      Some(Source.fromFile(file).mkString)
+    else
+      None
+  }
+
   def help: Unit = {
     println(
       """Usage: aws <action>
         |  Where <action> is one of:
         |    auth   provide authentication for an additional AWS account
+        |      add accountName - you will be prompted to add credentials for AWS accountName
         |      delete - accountName delete authentication for specified AWS account name
         |      list   - list authentications
         |      modify - accountName modify authentication for specified AWS account name
@@ -74,6 +86,13 @@ object Main extends App {
     System.exit(0)
   }
 
+  /** @return true if bucket exists for given or implicit AWS S3 account credentials */
+  def bucketExists(bucketName: String)(implicit s3: S3): Boolean = s3.listBuckets().contains(bucketName)
+
+  /**
+    * Walk up from the current directory
+    * @return Some(File) for first `.s3` file found, or None
+    */
   def findS3File(fileName: String=".s3", directory: File=new File(System.getProperty("user.dir"))): Option[File] = {
     val file = new File(directory, fileName)
     if (file.exists()) {
@@ -87,24 +106,71 @@ object Main extends App {
     }
   }
 
-  def fileContents = Source.fromFile(credentialPath.path).mkString
-
-  def getAuthentication(accountName: String): Option[Credentials] = {
-    if (credentialPath.exists) {
-      val creds = AllCredentials(parse[Array[Credentials]](fileContents)).flatMap { cred =>
-        if (cred.awsAccountName==accountName)
-          Some(cred)
-        else
-          None
-      }
-      if (creds.length==0)
-        None
-      else
-        Some(creds.head)
-    } else
+  /** @return `Some(S3)` for any `.s3` file found, or None */
+  def findS3: Option[S3] = findS3FileObject match {
+    case None =>
       None
+
+    case Some(s3File) =>
+      getAuthentication(s3File.accountName) match {
+        case None =>
+          None
+
+        case Some(credentials) =>
+          //val creds = credentials.asInstanceOf[Credentials]
+          s3Option = Some(new S3(credentials.accessKey, credentials.secretKey))
+          s3Option
+      }
   }
 
+  /** @return `Some(S3File)` for any `.s3` file found, or None */
+  def findS3FileObject: Option[S3File] = findS3File() match {
+    case None =>
+      None
+
+    case Some(file) =>
+      Some(parseS3File(file))
+  }
+
+  /**
+    * Parse `.aws` file if it exists
+    * @return Some(Credentials) authentication for given accountName, or None
+    */
+  def getAuthentication(accountName: String): Option[Credentials] = {
+    credentialFileContents match {
+      case None =>
+        None
+
+      case Some(contents) =>
+        val creds = AllCredentials(parse[Array[Credentials]](contents)).flatMap { cred =>
+          if (cred.awsAccountName==accountName)
+            Some(cred)
+          else
+            None
+        }
+        if (creds.length==0)
+          None
+        else
+          Some(creds.head)
+    }
+  }
+
+  def getS3(s3File: S3File): Option[S3] = {
+    getAuthentication(s3File.accountName) match {
+      case None =>
+        Main.s3Option = None
+
+      case Some(credentials) =>
+        val s3 = new S3(credentials.accessKey, credentials.secretKey)
+        Main.s3Option = Some(s3)
+    }
+    Main.s3Option
+  }
+
+  /** @return S3File from parsing JSON in given `.s3` file */
+  def parseS3File(file: File): S3File = parse[S3File](Path(file).slurpString(Codec.UTF8))
+
+  /** Interactive prompt/reply */
   def prompt(msg: String, defaultValue: String=null): String = {
     print(msg +
       (if (defaultValue!=null)

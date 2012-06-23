@@ -24,7 +24,7 @@ class Link(args: Array[String]) {
           println("This directory is not associated with an S3 bucket. Specify the account and bucket name to create a link")
 
         case Some(file) =>
-          val s3File = parse[S3File](Path(file).slurpString(Codec.UTF8))
+          val s3File = parseS3File(file) //parse[S3File](Path(file).slurpString(Codec.UTF8))
           val synched = s3File.lastSyncOption match {
             case None =>
               "never synched"
@@ -58,7 +58,7 @@ class Link(args: Array[String]) {
             format(s3Path.toAbsolute, newS3File.accountName, newS3File.bucketName, synched))
 
         case Some(file) =>
-          val oldS3File: S3File = parse[S3File](Path(file).slurpString(Codec.UTF8))
+          val oldS3File: S3File = parseS3File(file) //parse[S3File](Path(file).slurpString(Codec.UTF8))
           val newS3File: S3File = oldS3File.copy(args(1), args(2)) // set to never synched because we cannot know if it ever was synched previously
           val synched = newS3File.lastSyncOption match {
             case None =>
