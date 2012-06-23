@@ -32,9 +32,24 @@ class Delete(args: Array[String]) {
       }
 
     case 3 => // delete awsAccountName bucketName
-      // todo error if bucket does not exist
-      // todo else delete bucket
-      // todo if .s3 file exists in current directory or parent, tell user that they could run create then sync commands
+      val accountName = args(1)
+      val bucketName = args(2)
+      getAuthentication(accountName) match {
+        case None =>
+          println("AWS credentials not found for AWS account '%s'".format(accountName))
+
+        case Some(credentials) =>
+          val s3 = new S3(credentials.accessKey, credentials.secretKey)
+          s3.deleteBucket(bucketName)
+          print("AWS bucket '%s' deleted from account '%s'.".format(bucketName, accountName))
+          findS3File() match {
+            case None =>
+              println
+
+            case Some(file) =>
+              println(" \n%s was not deleted in case you want to recreate the bucket with the create subcommand.".format(file.getCanonicalPath))
+          }
+      }
 
     case _ =>
       println("Error: Too many arguments provided for delete")
