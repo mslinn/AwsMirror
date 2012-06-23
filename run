@@ -1,0 +1,7 @@
+#!/bin/bash
+# Runs under Cygwin
+export JAVA_HOME="$(cygpath -d 'E:\Program Files\Java\jdk1.7.0')"
+set -xv
+"$JAVA_HOME/bin/java" $JAVA_OPTS -Xmx1024M \
+-jar d:/storage/programming/scala/sbt-launch.jar \
+"run-main com.micronautics.aws.Main $*"
