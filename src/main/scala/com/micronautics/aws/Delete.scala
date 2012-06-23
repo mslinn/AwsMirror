@@ -25,7 +25,7 @@ class Delete(args: Array[String]) {
               println("AWS credentials did not match for AWS account '%s' and bucket '%s'".format(s3File.accountName, s3File.bucketName))
 
             case Some(s3) =>
-              s3.deleteBucket(s3)
+              s3.deleteBucket(s3File.bucketName)
               println("AWS bucket '%s' deleted from account '%s'. %s was not deleted in case you want to recreate the bucket easily with the create subcommand.".
                 format(s3File.bucketName, s3File.accountName, findS3File().get.getCanonicalPath))
           }
