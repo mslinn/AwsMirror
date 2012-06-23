@@ -40,5 +40,4 @@ class Delete(args: Array[String]) {
       println("Error: Too many arguments provided for delete")
       help
   }
-
 }
