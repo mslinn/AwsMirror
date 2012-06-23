@@ -72,8 +72,8 @@ object Main extends App {
         |      modify - accountName modify authentication for specified AWS account name
         |    create [accountName bucketName]
         |        create specified bucket for accountName, or bucket specified in relevent .s3 file
-        |    delete [bucketName]
-        |        delete specified bucket, or bucket specified in relevent .s3 file
+        |    delete [accountName bucketName]
+        |        delete specified bucket from AWS account, or bucket specified in relevent .s3 file
         |    download
         |      download bucket specified in relevent .s3 file to the entire tree
         |    empty [bucketName]
@@ -114,15 +114,17 @@ object Main extends App {
       None
 
     case Some(s3File) =>
-      getAuthentication(s3File.accountName) match {
-        case None =>
-          None
+      s3Option(s3File.accountName)
+  }
 
-        case Some(credentials) =>
-          //val creds = credentials.asInstanceOf[Credentials]
-          s3Option = Some(new S3(credentials.accessKey, credentials.secretKey))
-          s3Option
-      }
+  def s3Option(accountName: String): Option[S3] = {
+    getAuthentication(accountName) match {
+      case None =>
+        None
+
+      case Some(credentials) =>
+        Some(new S3(credentials.accessKey, credentials.secretKey))
+    }
   }
 
   /** @return `Some(S3File)` for any `.s3` file found, or None */
