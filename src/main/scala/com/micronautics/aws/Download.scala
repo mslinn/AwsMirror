@@ -33,7 +33,7 @@ class Download(args: Array[String]) {
                 println("Error: AWS account %s does not define bucket %s".format(s3File.accountName, s3File.bucketName))
                 System.exit(-1)
               }
-              new Downloader(credentials, s3File.bucketName).download(file.getParentFile)
+              new Downloader(credentials, s3File.bucketName, true).download(file.getParentFile)
           }
       }
 

@@ -37,7 +37,7 @@ public class Uploader extends DirectoryWalker<File> {
                 return;
             }
             System.out.println("Uploading " + path + " to " + bucketName);
-            s3.uploadFile(bucketName, path, file);
+            s3.uploadFile(bucketName, path, file); // todo use a Future
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }

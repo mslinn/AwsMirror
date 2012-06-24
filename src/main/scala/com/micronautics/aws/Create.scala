@@ -20,7 +20,7 @@ class Create(args: Array[String]) {
 
         case Some(file) =>
           val s3File: S3File = parseS3File(file)
-          getS3(s3File) match {
+          s3fileTos3Option(s3File) match {
             case None =>
               println("No authentication credentials stored in .aws")
               System.exit(-4)

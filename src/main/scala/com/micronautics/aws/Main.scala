@@ -10,7 +10,7 @@ import org.joda.time.format.DateTimeFormat
 
 object Main extends App {
   def credentialPath: Path = Path(new File(sys.env("HOME"))) / ".aws"
-  implicit val system = ActorSystem()
+  lazy val system = ActorSystem()
   var s3Option: Option[S3] = None
   val dtFormat = DateTimeFormat.forPattern("HH:mm:ss 'on' mmm, dd YYYY")
 
@@ -159,7 +159,7 @@ object Main extends App {
     }
   }
 
-  def getS3(s3File: S3File): Option[S3] = {
+  implicit def s3fileTos3Option(s3File: S3File): Option[S3] = {
     getAuthentication(s3File.accountName) match {
       case None =>
         Main.s3Option = None

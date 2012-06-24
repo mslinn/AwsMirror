@@ -5,8 +5,11 @@ import java.io.{IOException, File}
 import java.util.ArrayList
 import scala.collection.JavaConversions._
 import org.apache.commons.io.FileUtils
+import akka.dispatch.Future
+import Main.system
 
-class Downloader(credentials: Credentials, bucketName: String) {
+/** Downloads on multiple threads */
+class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolean) {
   private[aws] val s3 = new S3(credentials.accessKey, credentials.secretKey)
 
   def download(localDir: File): ArrayList[File] = {
@@ -20,13 +23,12 @@ class Downloader(credentials: Credentials, bucketName: String) {
         if (node.getKey.endsWith("/")) {
           outFile.mkdirs
         } else {
-          if (outFile.getParent!=null)
+          val fileName = node.getKey
+          val overwriteExisting: Boolean = !(new File(fileName).exists()) || overwrite
+          if (outFile.getParent!=null && overwriteExisting)
             outFile.getParentFile.mkdirs
-          if (!node.getKey.endsWith("$folder$")) {
-            println("Downloading " + outFile + ", last modified " + node.getLastModified() + ", " + node.getSize + " bytes.")
-            FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
-            outFile.setLastModified(node.getLastModified().getTime);
-          }
+          if (!fileName.endsWith("$folder$") && overwriteExisting)
+            Future(downloadOne(outFile, node))(Main.system.dispatcher)
         }
       } catch {
         case ioe: IOException =>
@@ -34,6 +36,12 @@ class Downloader(credentials: Credentials, bucketName: String) {
       }
     }
     results
+  }
+
+  def downloadOne(outFile: File, node: S3ObjectSummary) {
+    println("Downloading " + outFile + ", last modified " + node.getLastModified() + ", " + node.getSize + " bytes.")
+    FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
+    outFile.setLastModified(node.getLastModified().getTime);
   }
 
   def deleteBadKeys {
