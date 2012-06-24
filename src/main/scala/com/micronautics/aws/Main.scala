@@ -198,6 +198,7 @@ object Main extends App {
     * Write `.s3` file
     * @return String indicating when last synced, if ever synced
     */
+  // todo figure out how to pretty print
   def writeS3(newS3File: S3File): String = {
     val synced = newS3File.lastSyncOption match {
       case None =>
@@ -206,7 +207,7 @@ object Main extends App {
       case Some(dateTime) =>
         "last synced " + dtFormat.print(dateTime)
     }
-    writeS3(generate(newS3File))
+    writeS3(generate(newS3File) + "\n")
     synced
   }
 }

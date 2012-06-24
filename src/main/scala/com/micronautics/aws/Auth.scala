@@ -61,7 +61,7 @@ class Auth(args: Array[String]) {
         println(listBuckets(accessKey, secretKey, accountName))
 
         val json = generate(credentials) // todo figure out how to pretty print
-        credentialPath.write(json)
+        credentialPath.write(json + "\n")
 
       case `delete` =>
         if (accountName==null) {

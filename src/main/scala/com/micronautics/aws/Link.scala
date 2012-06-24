@@ -45,13 +45,7 @@ class Link(args: Array[String]) {
         case Some(file) =>
           val oldS3File: S3File = parseS3File(file) //parse[S3File](Path(file).slurpString(Codec.UTF8))
           val newS3File: S3File = oldS3File.copy(args(1), args(2)) // set to never synched because we cannot know if it ever was synched previously
-          val synced = newS3File.lastSyncOption match {
-            case None =>
-              "never synced"
-
-            case Some(dateTime) =>
-              "last synced " + dtFormat.print(dateTime)
-          }
+          val synced = writeS3(newS3File)
           println("%s is now linked with account '%s', bucket '%s' (%s)".
             format(file.getCanonicalPath, newS3File.accountName, newS3File.bucketName, synced))
       }
