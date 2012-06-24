@@ -20,16 +20,18 @@ These hidden files are ignored by this program; users never see them because the
 
 ## To Build ##
 
-This program requires Java 7 or later.
-Either point `JAVA_HOME` to a Java 7 JDK, or point `JAVA7_HOME` to that directory.
-
+ 1. This program requires Java 7 or later.
+ 1. Either point `JAVA_HOME` to a Java 7 JDK, or point `JAVA7_HOME` to that directory.
+ 1. Type the following into a bash console:
 ````
 git clone git@github.com:mslinn/awsMirror.git
 cd awsMirror
 sbt compile start-script
 ````
 
-Add `awsMirror/target` to the `PATH`.
+ 1. Add `awsMirror/target` to the `PATH`.
+
+ 1. See [my suggestion](https://github.com/typesafehub/xsbt-start-script-plugin/issues/17) on how to improve the generated script
 
 ## To Run ##
 
