@@ -1,6 +1,6 @@
 #!/bin/bash
-# Runs under Cygwin
-export JAVA_HOME="$(cygpath -d 'E:\Program Files\Java\jdk1.7.0')"
+# Launch SBT from Java 7
+if [ -n "$JAVA7_HOME" ]; then export JAVA_HOME="$JAVA7_HOME"; fi
 "$JAVA_HOME/bin/java" $JAVA_OPTS -Xmx1024M \
 -jar e:/storage/programming/scala/sbt-launch.jar \
 "run-main com.micronautics.aws.Main $*"
