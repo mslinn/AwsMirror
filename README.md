@@ -29,7 +29,7 @@ cd awsMirror
 sbt compile start-script
 ````
 
- 1. Add `awsMirror/target` to the `PATH`.
+ 1. Add `awsMirror` and `awsMirror/target` to the `PATH`.
 
  1. See [my suggestion](https://github.com/typesafehub/xsbt-start-script-plugin/issues/17) on how to improve the generated script
 
