@@ -1,6 +1,17 @@
 #!/bin/bash
-# Launch SBT from Java 7
-if [ -n "$JAVA7_HOME" ]; then export JAVA_HOME="$JAVA7_HOME"; fi
-"$JAVA_HOME/bin/java" $JAVA_OPTS -Xmx1024M \
--jar e:/storage/programming/scala/sbt-launch.jar \
-"run-main com.micronautics.aws.Main $*"
+# Launch SBT from Java 7 and run awsMirror
+
+if [ "$JAVA7_HOME" ]; then export JAVA_HOME="$JAVA7_HOME"; fi
+if [ -z "$SBT_HOME" ]; then
+   echo "SBT_HOME must point to the directory where sbt-launch.jar resides"
+   exit -1
+fi
+
+export JAVA_OPTS="-XX:+CMSClassUnloadingEnabled $JAVA_OPTS"
+export JAVA_OPTS="-XX:MaxPermSize=1536m -Xss2M -Xmx1G -Xms1G $JAVA_OPTS"
+export JAVA_OPTS="-server $JAVA_OPTS"
+
+#"$JAVA_HOME/bin/java" $JAVA_OPTS -jar $SBT_HOME/sbt-launch.jar \
+#  "run-main com.micronautics.aws.Main $*"
+
+start $*

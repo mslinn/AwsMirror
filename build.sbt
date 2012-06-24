@@ -1,6 +1,8 @@
 // see https://github.com/sbt/sbt-assembly
 //import AssemblyKeys._ // put this at the top of the file
 
+import com.typesafe.startscript.StartScriptPlugin
+
 organization := "Micronautics Research"
 
 name := "awsMirror"
@@ -36,6 +38,8 @@ libraryDependencies ++= Seq(
 )
 
 //seq(assemblySettings: _*)
+
+seq(StartScriptPlugin.startScriptForClassesSettings: _*)
 
 logLevel := Level.Error
 
