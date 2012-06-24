@@ -90,19 +90,20 @@ You can add more AWS accounts by running the same command again.
 {"accountName":"memyselfi","bucketName":"test789"}
 ````
     From the directory you wish to be the mirror root, run one of the following commands.
-  a. If the AWS S3 bucket you wish to mirror the directory tree to does not already exist:
+
+  a) If the AWS S3 bucket you wish to mirror the directory tree to does not already exist:
 
  ````
  awsMirror create yourAccountName bucketName
  ````
 
-  a. If the AWS S3 bucket already exists:
+  b) If the AWS S3 bucket already exists:
 
  ````
  awsMirror link yourAccountName bucketName
  ````
 
- 1. Sync the directory with the AWS S3 bucket:
+ 3. Sync the directory with the AWS S3 bucket:
 ````
 awsMirror sync
 ````
