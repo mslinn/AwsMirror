@@ -66,6 +66,7 @@ The `upload` and `sync` commands continue uploading changed files until you pres
  1. You first need to run the program with the `auth` option so it can create a file in your home directory called `.aws` to
 hold your AWS access key and your AWS secret key for the AWS account you specify.
 You can store multiple authentications for each of the AWS accounts that you work with.
+
 ````
 awsMirror auth yourAccountName
 ````
@@ -80,7 +81,7 @@ The contents of the `.aws` file are in JSON format, and look something like this
 
 You can add more AWS accounts by running the same command again.
 
- 1. Designate a directory to be the root of a directory tree that you want mirrored to AWS S3.
+ 2. Designate a directory to be the root of a directory tree that you want mirrored to AWS S3.
     Both of the following steps creates or modifies a file called `.s3` in the current directory.
     The `.s3` file defines the root of a source directory tree, and stores the account and bucket that the source directory
     tree is associated with. It also stores the timestamp of the last sync. Its format is JSON.
@@ -89,19 +90,19 @@ You can add more AWS accounts by running the same command again.
 {"accountName":"memyselfi","bucketName":"test789"}
 ````
     From the directory you wish to be the mirror root, run one of the following commands.
- a. If the AWS S3 bucket you wish to mirror the directory tree to does not already exist:
+  a. If the AWS S3 bucket you wish to mirror the directory tree to does not already exist:
 
  ````
  awsMirror create yourAccountName bucketName
  ````
 
- 1. If the AWS S3 bucket already exists:
+  a. If the AWS S3 bucket already exists:
 
  ````
  awsMirror link yourAccountName bucketName
  ````
 
-  1. Sync the directory with the AWS S3 bucket:
+ 1. Sync the directory with the AWS S3 bucket:
 ````
 awsMirror sync
 ````
