@@ -31,7 +31,12 @@ sbt compile start-script
 
  1. Add `awsMirror` and `awsMirror/target` to the `PATH`.
 
- 1. See [my suggestion](https://github.com/typesafehub/xsbt-start-script-plugin/issues/17) on how to improve the generated script
+ 1. See [my suggestion](https://github.com/typesafehub/xsbt-start-script-plugin/issues/17) on how to improve the generated script.
+ If you install my modified version of `xsbt-start-script-plugin` then you should be able to run the script from any directory. To do that:
+````
+git clone https://github.com/mslinn/xsbt-start-script-plugin/`
+sbt compile publish-local
+````
 
 ## To Run ##
 
