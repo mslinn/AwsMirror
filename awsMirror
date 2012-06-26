@@ -14,4 +14,5 @@ export JAVA_OPTS="-server $JAVA_OPTS"
 #"$JAVA_HOME/bin/java" $JAVA_OPTS -jar $SBT_HOME/sbt-launch.jar \
 #  "run-main com.micronautics.aws.Main $*"
 
-start $*
+export PATH=$JAVA_HOME/bin:$PATH
+$(dirname $BASH_SOURCE)/target/start $*
