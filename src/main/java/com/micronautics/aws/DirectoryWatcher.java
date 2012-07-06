@@ -13,6 +13,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
+// todo marked abstract for upload and delete handlers
 public class DirectoryWatcher {
     private WatchService watcher = null;
     private final Path dir;
@@ -59,7 +60,6 @@ public class DirectoryWatcher {
 
                     System.out.println("Take action on " + path + "; " + kind + "; dt=" + dt + "ms");
                     // todo delete from S3
-
                     continue;
                 }
 
@@ -71,7 +71,7 @@ public class DirectoryWatcher {
 
                 if (differentFile || (!differentFile && dt>150)) {
                     System.out.println("Take action on " + path + "; " + kind + "; dt=" + dt + "ms");
-                    // todo upload with S3 on another thread
+                    // todo Futures.future(new UploadOne(bucketName, path, file), dispatcher);
                 } else {
                     //System.out.println("Skipping duplicate " + path + "; " + kind + "; dt=" + dt);
                 }
