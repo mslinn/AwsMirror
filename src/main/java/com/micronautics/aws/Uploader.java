@@ -52,15 +52,13 @@ public class Uploader extends DirectoryWalker<File> {
         return results;
     }
 
-    /** @return true if matching s3 file and it is newer, or if there is a read error */
-    private boolean s3FileIsNewer(File file, String path) {
+    /** @return true if matching s3 file and it is older, or if there is a read error */
+    private boolean s3FileIsOlder(File file, String path) {
         for (S3ObjectSummary node : allNodes) {
             String key = node.getKey();
             try {
-                if (key.compareTo(path)==0) {
-                    Date s3NodeLastModified = node.getLastModified();
-                    return s3NodeLastModified.getTime()<file.lastModified();
-                }
+                if (key.compareTo(path)==0)
+                  return s3FileIsOlder(file, node);
             } catch (Exception e) {
                 System.out.println(e.getMessage() + ": " + key);
                 return true;
@@ -69,12 +67,26 @@ public class Uploader extends DirectoryWalker<File> {
         return false;
     }
 
+    public static boolean s3FileIsOlder(File file, S3ObjectSummary node) {
+        if (!file.exists())
+            return false;
+
+        Date s3NodeLastModified = node.getLastModified();
+        boolean isOlder = s3NodeLastModified.getTime()<file.lastModified();
+//        System.out.println("s3NodeLastModified.getTime()=" + s3NodeLastModified.getTime() +
+//                "; file.lastModified()=" + file.lastModified() +
+//                "; older=" + isOlder);
+        return isOlder;
+    }
+
     private ArrayList<String> ignoredFileNames = new ArrayList<String>(Arrays.asList(".s3", ".git", ".aws", ".svn"));
 
     protected void handleFile(File file, int depth, Collection results) {
         try {
             String path = canonicalPath(file);
-            if (!overwrite && s3FileIsNewer(file, path)) {
+            boolean s3Older = s3FileIsOlder(file, path);
+            //System.out.println("overwrite=" + overwrite + "; s3Older=" + s3Older + "; " + file.getAbsolutePath());
+            if (!overwrite && !s3Older) {
                 System.out.println("Skipping " + path);
                 return;
             }

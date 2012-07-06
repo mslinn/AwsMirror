@@ -19,7 +19,7 @@ class Sync(args: Array[String]) {
 
       val (credentials, s3fileObject, s3File) = retrieveParams
       new Downloader(credentials, s3fileObject.bucketName, false).download(s3File.getParentFile)
-      Future(upload(credentials, s3fileObject.bucketName, s3File))(Main.system.dispatcher)
+      Future(upload(credentials, s3fileObject.bucketName, s3File, false))(Main.system.dispatcher)
 
     case _ =>
       println("Error: Too many arguments provided for sync")

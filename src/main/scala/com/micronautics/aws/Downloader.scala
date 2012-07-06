@@ -2,7 +2,7 @@ package com.micronautics.aws
 
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import java.io.{IOException, File}
-import java.util.ArrayList
+import java.util.{Date, ArrayList}
 import scala.collection.JavaConversions._
 import org.apache.commons.io.FileUtils
 import akka.dispatch.{ExecutionContext, Await, Future}
@@ -27,10 +27,12 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
           outFile.mkdirs
         } else {
           val fileName = node.getKey
-          val overwriteExisting: Boolean = !(new File(fileName).exists()) || overwrite
+          val file = new File(localDir, fileName)
+          val overwriteExisting: Boolean = !(file.exists()) || overwrite
           if (outFile.getParent!=null && overwriteExisting)
             outFile.getParentFile.mkdirs
-          if (!fileName.endsWith("$folder$") && overwriteExisting) // todo implement .s3ignore
+          val s3FileNewer = s3FileIsNewer(file, node)
+          if (!fileName.endsWith("$folder$") && overwriteExisting  && s3FileNewer) // todo implement .s3ignore
             futures += Future(downloadOne(outFile, node))
         }
       } catch {
@@ -40,6 +42,15 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
     }
     //Await.ready(Future.sequence(futures.toSeq), Duration.Inf) // block until all downloads are complete
     results
+  }
+
+  def s3FileIsNewer(file: File, node: S3ObjectSummary): Boolean = {
+    if (!file.exists) return true
+    val s3NodeLastModified: Date = node.getLastModified
+    val isNewer: Boolean = s3NodeLastModified.getTime > file.lastModified
+//    System.out.println("s3NodeLastModified.getTime()=" + s3NodeLastModified.getTime +
+//      "; file.lastModified()=" + file.lastModified + "; newer=" + isNewer)
+    return isNewer
   }
 
   def downloadOne(outFile: File, node: S3ObjectSummary) = {

@@ -43,8 +43,8 @@ object Upload {
     new DirectoryWatcher(watchPath).watch()
   }
 
-  def upload(credentials: Credentials, bucketName: String, s3File: File): Unit = {
-    new Uploader(credentials, bucketName, true).upload(s3File.getParentFile)
+  def upload(credentials: Credentials, bucketName: String, s3File: File, overwrite: Boolean = true): Unit = {
+    new Uploader(credentials, bucketName, overwrite).upload(s3File.getParentFile)
     uploadContinuously(s3File)
   }
 }
