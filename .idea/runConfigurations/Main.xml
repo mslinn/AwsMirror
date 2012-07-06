@@ -8,10 +8,10 @@
     </extension>
     <option name="MAIN_CLASS_NAME" value="com.micronautics.aws.Main" />
     <option name="VM_PARAMETERS" value="" />
-    <option name="PROGRAM_PARAMETERS" value="link mslinn ej-www" />
-    <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
-    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-    <option name="ALTERNATIVE_JRE_PATH" value="" />
+    <option name="PROGRAM_PARAMETERS" value="sync" />
+    <option name="WORKING_DIRECTORY" value="file://K:/sites/ellenjoseph.com/www/production/webapps/new" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="ALTERNATIVE_JRE_PATH" value="E:/Program Files/Java/jdk1.7.0" />
     <option name="ENABLE_SWING_INSPECTOR" value="false" />
     <option name="ENV_VARIABLES" />
     <option name="PASS_PARENT_ENVS" value="true" />
@@ -22,7 +22,9 @@
       <option name="TRANSPORT" value="0" />
       <option name="LOCAL" value="true" />
     </RunnerSettings>
+    <RunnerSettings RunnerId="Run" />
     <ConfigurationWrapper RunnerId="Debug" />
+    <ConfigurationWrapper RunnerId="Run" />
     <method>
       <option name="SBT.BeforeRunTask" enabled="true" action="products" runInCurrentModule="false" />
     </method>

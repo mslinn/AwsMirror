@@ -38,13 +38,13 @@ object Upload {
 
   /** Continue uploading until Control-C */
   def uploadContinuously(root: File): Unit = {
-    println("Monitoring %s for changes to upload".format(root.getCanonicalPath))
+    println("Monitoring %s for changes to upload; Control-C to stop".format(root.getCanonicalPath))
     val watchPath = Paths.get(root.getParent)
     new DirectoryWatcher(watchPath).watch()
   }
 
   def upload(credentials: Credentials, bucketName: String, s3File: File): Unit = {
-    new Uploader(credentials, bucketName).upload(s3File.getParentFile)
+    new Uploader(credentials, bucketName, true).upload(s3File.getParentFile)
     uploadContinuously(s3File)
   }
 }

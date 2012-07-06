@@ -67,8 +67,8 @@ public class S3 {
     * when uploading to S3, which allows you set a variety of options
     * like content-type and content-encoding, plus additional metadata
     * specific to your applications. */
-    public void uploadFile(String bucketName, String key, File file) {
-        s3.putObject(new PutObjectRequest(bucketName, key, file));
+    public PutObjectResult uploadFile(String bucketName, String key, File file) {
+        return s3.putObject(new PutObjectRequest(bucketName, key, file));
     }
 
     /** @param key not sure what this is for; might it be a directory name?

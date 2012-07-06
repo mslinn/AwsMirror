@@ -18,8 +18,8 @@ class Sync(args: Array[String]) {
       // Error if no .s3 file or bucket does not exist
 
       val (credentials, s3fileObject, s3File) = retrieveParams
-      Future(upload(credentials, s3fileObject.bucketName, s3File))(Main.system.dispatcher)
       new Downloader(credentials, s3fileObject.bucketName, false).download(s3File.getParentFile)
+      Future(upload(credentials, s3fileObject.bucketName, s3File))(Main.system.dispatcher)
 
     case _ =>
       println("Error: Too many arguments provided for sync")

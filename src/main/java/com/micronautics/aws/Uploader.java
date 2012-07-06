@@ -1,5 +1,12 @@
 package com.micronautics.aws;
 
+import akka.dispatch.Await;
+import akka.dispatch.Future;
+import akka.dispatch.Futures;
+import akka.dispatch.MessageDispatcher;
+import akka.util.Duration;
+import com.amazonaws.services.s3.model.PutObjectResult;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.commons.io.DirectoryWalker;
 
 import java.io.File;
@@ -7,37 +14,77 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 public class Uploader extends DirectoryWalker<File> {
+    boolean overwrite;
     int treeRootStrLen;
     Credentials credentials;
     S3 s3;
     String bucketName;
+    MessageDispatcher dispatcher = Main.system().dispatcher();
+    private final ArrayList<Future<PutObjectResult>> futures = new ArrayList<Future<PutObjectResult>>();
+    LinkedList<S3ObjectSummary> allNodes;
 
-    public Uploader(Credentials credentials, String bucketName) {
+    public Uploader(Credentials credentials, String bucketName, boolean overwrite) {
         super();
         this.credentials = credentials;
         this.bucketName = bucketName;
+        this.overwrite = overwrite;
         s3 = new S3(credentials.accessKey(), credentials.secretKey());
     }
 
     public List<File> upload(File treeRoot) throws IOException {
+        // todo share allNodes with Downloader so sync does not fetch all objects twice
+        allNodes = s3.getAllObjectData(bucketName, ""); // get every object
         treeRootStrLen = treeRoot.getCanonicalPath().length();
         ArrayList<File> results = new ArrayList<File>();
         walk(treeRoot, results);
+        final Future<Iterable<PutObjectResult>> future = Futures.sequence(futures, dispatcher);
+        try { // block until the Futures all complete
+            Await.result(future, Duration.Inf());
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+        }
         return results;
     }
+
+    /** @return true if matching s3 file and it is newer, or if there is a read error */
+    private boolean s3FileIsNewer(File file, String path) {
+        for (S3ObjectSummary node : allNodes) {
+            String key = node.getKey();
+            try {
+                if (key.compareTo(path)==0) {
+                    Date s3NodeLastModified = node.getLastModified();
+                    return s3NodeLastModified.getTime()<file.lastModified();
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage() + ": " + key);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ArrayList<String> ignoredFileNames = new ArrayList<String>(Arrays.asList(".s3", ".git", ".aws", ".svn"));
 
     protected void handleFile(File file, int depth, Collection results) {
         try {
             String path = canonicalPath(file);
-            if (new ArrayList<String>(Arrays.asList(".s3", ".git", ".aws", ".svn")).contains(file.getName())) {
-                System.out.println("Skipping  " + path);
+            if (!overwrite && s3FileIsNewer(file, path)) {
+                System.out.println("Skipping " + path);
+                return;
+            }
+            if (ignoredFileNames.contains(file.getName())) {
+                System.out.println("Ignoring " + path);
                 return;
             }
             System.out.println("Uploading " + path + " to " + bucketName);
-            s3.uploadFile(bucketName, path, file); // todo use a Future
+            final Future<PutObjectResult> future = Futures.future(new UploadOne(bucketName, path, file), dispatcher);
+            futures.add(future);
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
@@ -45,5 +92,22 @@ public class Uploader extends DirectoryWalker<File> {
 
     private String canonicalPath(File file) throws IOException {
         return file.getCanonicalPath().substring(treeRootStrLen).replace('\\', '/');
+    }
+
+    private class UploadOne implements Callable<PutObjectResult> {
+        private String bucketName;
+        private String path;
+        private File file;
+
+        public UploadOne(String bucketName, String path, File file) {
+            this.bucketName = bucketName;
+            this.path = path;
+            this.file = file;
+        }
+
+        @Override
+        public PutObjectResult call() {
+            return s3.uploadFile(bucketName, path, file);
+        }
     }
 }
