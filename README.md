@@ -47,6 +47,7 @@ sbt compile start-script
  1. Add  `awsMirror/target` to the `PATH` or write a script like this bash script to launch the program:
 ````
 #!/bin/bash
+# ensure that Java 7 is on the classpath; best if JAVA_HOME is also set
 ~/work//awsMirror/target/start $*
 ````
 
