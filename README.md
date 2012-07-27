@@ -45,7 +45,6 @@ sbt compile start-script
 ````
 
  1. Add  `awsMirror/target` to the `PATH` or write a script like this bash script to launch the program:
-
 ````
 #!/bin/bash
 ~/work//awsMirror/target/start $*
