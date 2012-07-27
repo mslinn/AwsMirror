@@ -44,7 +44,8 @@ cd awsMirror
 sbt compile start-script
 ````
 
- 1. Add  `awsMirror/target` to the `PATH` or write a script like this bash script to launch the program:
+ 1. Add  `awsMirror/target` to the `PATH` or write a script like this bash script to launch the program.
+    The remainder of these instructions assume that a similar script exists somewhere on the path called `awsMirror`:
 ````
 #!/bin/bash
 # Ensure that Java 7 is on the classpath; best if JAVA_HOME is also set
@@ -56,7 +57,7 @@ export SBT_HOME=/opt
 ## To Run ##
 
 ````
-target/start subcommandsGoHere
+awsMirror subcommandsGoHere
 ````
 
 The help message shows all the subcommands:
