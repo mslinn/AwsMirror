@@ -20,6 +20,21 @@ These hidden files are ignored by this program; users never see them because the
 
 ## To Build ##
 
+### Start Script ###
+
+The compiled program needs to be run from a script.
+`xsbt-start-script-plugin` creates that script.
+See [my suggestion](https://github.com/typesafehub/xsbt-start-script-plugin/issues/17) on how to improve the generated script.
+If you install my modified version of `xsbt-start-script-plugin` then you should be able to run the script from any directory.
+To do that:
+
+````
+git clone git://github.com/mslinn/xsbt-start-script-plugin.git`
+sbt compile publish-local
+````
+
+### Building AwsMirror ###
+
  1. This program requires Java 7 or later.
  1. Either point `JAVA_HOME` to a Java 7 JDK, or point `JAVA7_HOME` to that directory.
  1. Type the following into a bash console:
@@ -29,13 +44,11 @@ cd awsMirror
 sbt compile start-script
 ````
 
- 1. Add `awsMirror` and `awsMirror/target` to the `PATH`.
+ 1. Add  `awsMirror/target` to the `PATH` or write a script like this bash script to launch the program:
 
- 1. See [my suggestion](https://github.com/typesafehub/xsbt-start-script-plugin/issues/17) on how to improve the generated script.
- If you install my modified version of `xsbt-start-script-plugin` then you should be able to run the script from any directory. To do that:
 ````
-git clone https://github.com/mslinn/xsbt-start-script-plugin/`
-sbt compile publish-local
+#!/bin/bash
+~/work//awsMirror/target/start $*
 ````
 
 ## To Run ##
