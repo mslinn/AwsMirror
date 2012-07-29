@@ -27,6 +27,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
+  "ch.qos.logback"                %  "logback-classic"     % "1.0.0"  withSources(),
   "com.amazonaws"                 %  "aws-java-sdk"        % "1.3.13" withSources(),
   "commons-io"                    %  "commons-io"          % "2.4"    withSources(),
   "com.codahale"                  %  "jerkson_2.9.1"       % "0.5.0",
@@ -34,7 +35,8 @@ libraryDependencies ++= Seq(
   "com.github.scala-incubator.io" %  "scala-io-core_2.9.1" % "0.4.0"  withSources(),
   "com.github.scala-incubator.io" %  "scala-io-file_2.9.1" % "0.4.0"  withSources(),
   "org.scala-tools.time"          %  "time_2.9.1"          % "0.5",
-  "org.scribe"                    %  "scribe"              % "1.3.1"  withSources()
+  "org.scribe"                    %  "scribe"              % "1.3.1"  withSources(),
+  "org.slf4j"                     %  "slf4j-api"           % "1.6.5"  withSources()
 )
 
 //seq(assemblySettings: _*)

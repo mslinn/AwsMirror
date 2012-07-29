@@ -1,6 +1,8 @@
 package com.micronautics.aws;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +20,7 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 // todo mark abstract for upload and delete handlers
 public class DirectoryWatcher {
+    private Logger logger = LoggerFactory.getLogger(getClass());
     private WatchService watcher = null;
     private final Path dir;
     private List<Pattern> ignoredPatterns;
@@ -67,7 +70,7 @@ public class DirectoryWatcher {
                 Path path = ev.context();
 
                 if (ignore(path.toFile())) {
-                    System.out.println("DirectoryWatcher ignoring " + path.getFileName());
+                    logger.debug("DirectoryWatcher ignoring " + path.getFileName());
                     return;
                 }
 
@@ -79,19 +82,19 @@ public class DirectoryWatcher {
                     lastPath = path;
                     lastTime = thisTime;
 
-                    System.out.println("Take action on " + path + "; " + kind + "; dt=" + dt + "ms");
+                    logger.debug("Take action on " + path + "; " + kind + "; dt=" + dt + "ms");
                     // todo delete from S3
                     continue;
                 }
 
                 boolean differentFile = lastPath==null || path.compareTo(lastPath)!=0;
                 if (!differentFile && lastModified==path.toFile().lastModified() && kind==ENTRY_MODIFY) {
-                    System.out.println("DirectoryWatcher skipping " + path + "; " + kind + "; lastModified=" + lastModified);
+                    logger.debug("DirectoryWatcher skipping " + path + "; " + kind + "; lastModified=" + lastModified);
                     continue;
                 }
 
                 if (differentFile || (!differentFile && dt>150)) {
-                    System.out.println("DirectoryWatcher should take action on " + path + "; " + kind + "; dt=" + dt + "ms");
+                    logger.debug("DirectoryWatcher should take action on " + path + "; " + kind + "; dt=" + dt + "ms");
                     // todo Futures.future(new UploadOne(bucketName, path, file), dispatcher);
                 } else {
                     //System.out.println("Skipping duplicate " + path + "; " + kind + "; dt=" + dt);

@@ -1,0 +1,19 @@
+<configuration>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default
+         See http://logback.qos.ch/manual/layouts.html -->
+    <encoder>
+      <pattern>%date{mm:ss.SSS} %thread %logger{0}: %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="ch.qos.logback.classic"     level="WARNING" />
+  <logger name="com.micronautics.aws"       level="WARNING" />
+  <logger name="akka.actor.ActorSystemImpl" level="ERROR" />
+
+  <root level="WARNING">
+    <appender-ref ref="STDOUT" />
+  </root>
+</configuration>

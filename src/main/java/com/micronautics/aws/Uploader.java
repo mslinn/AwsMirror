@@ -8,6 +8,8 @@ import akka.util.Duration;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.commons.io.DirectoryWalker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +22,7 @@ import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
 public class Uploader extends DirectoryWalker<File> {
+    private Logger logger = LoggerFactory.getLogger(getClass());
     boolean overwrite;
     int treeRootStrLen;
     Credentials credentials;
@@ -75,7 +78,7 @@ public class Uploader extends DirectoryWalker<File> {
 
         Date s3NodeLastModified = node.getLastModified();
         boolean isOlder = s3NodeLastModified.getTime()<file.lastModified();
-//        System.out.println("s3NodeLastModified.getTime()=" + s3NodeLastModified.getTime() +
+//        logger.debug("s3NodeLastModified.getTime()=" + s3NodeLastModified.getTime() +
 //                "; file.lastModified()=" + file.lastModified() +
 //                "; older=" + isOlder);
         return isOlder;
@@ -84,7 +87,7 @@ public class Uploader extends DirectoryWalker<File> {
     protected boolean ignore(File file) {
         for (Pattern pattern : ignoredPatterns)
             if (pattern.matcher(file.getName()).matches()) {
-                System.out.println("Uploader ignoring " + file.getName());
+                logger.debug("Uploader ignoring " + file.getName());
                 return true;
             }
         return false;
@@ -93,7 +96,7 @@ public class Uploader extends DirectoryWalker<File> {
     @Override protected boolean handleDirectory(File directory, int depth, Collection results) {
         boolean ignore = ignore(directory);
         if (ignore)
-            System.out.println("Uploader ignoring " + directory.getName());
+            logger.debug("Uploader ignoring " + directory.getName());
         return !ignore;
     }
 
@@ -103,14 +106,14 @@ public class Uploader extends DirectoryWalker<File> {
             boolean s3Older = s3FileIsOlder(file, path);
             //System.out.println("overwrite=" + overwrite + "; s3Older=" + s3Older + "; " + file.getAbsolutePath());
             if (ignore(file)) {
-                System.out.println("Uploader ignoring " + path);
+                logger.debug("Uploader ignoring " + path);
                 return;
             }
             if (!overwrite && !s3Older) {
-                System.out.println("Uploader skipping " + path);
+                logger.debug("Uploader skipping " + path);
                 return;
             }
-            System.out.println("Uploading " + path + " to " + bucketName);
+            logger.info("Uploading " + path + " to " + bucketName);
             final Future<PutObjectResult> future = Futures.future(new UploadOne(bucketName, path, file), dispatcher);
             futures.add(future);
         } catch (IOException e) {

@@ -8,9 +8,11 @@ import org.apache.commons.io.FileUtils
 import akka.dispatch.{ExecutionContext, Await, Future}
 import collection.mutable
 import java.text.SimpleDateFormat
+import org.slf4j.LoggerFactory
 
 /** Downloads on multiple threads */
 class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolean) {
+  private val logger = LoggerFactory.getLogger(getClass)
   private[aws] val s3 = new S3(credentials.accessKey, credentials.secretKey)
   private val futures = mutable.ListBuffer.empty[Future[Boolean]]
   private implicit val dispatcher: ExecutionContext = Main.system.dispatcher
@@ -26,7 +28,7 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
       try {
         if (node.getKey.endsWith("/")) {
           if (!outFile.exists) {
-            println("Making " + relativeFileName(localDir, outFile))
+            logger.debug("Making " + relativeFileName(localDir, outFile))
             outFile.mkdirs
           }
         } else {
@@ -39,7 +41,7 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
             if (overwriteExisting  && s3FileNewer)
               futures += Future(downloadOne(outFile, node))
             else
-              println("Remote copy of %s is not newer, so it was not downloaded".format(outFileName))
+              logger.debug("Remote copy of %s is not newer, so it was not downloaded".format(outFileName))
           }
         }
       } catch {
@@ -60,7 +62,7 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
     if (!file.exists) return true
     val s3NodeLastModified: Date = node.getLastModified
     val isNewer: Boolean = s3NodeLastModified.getTime > file.lastModified
-//    System.out.println("s3NodeLastModified.getTime()=" + s3NodeLastModified.getTime +
+//    logger.debug("s3NodeLastModified.getTime()=" + s3NodeLastModified.getTime +
 //      "; file.lastModified()=" + file.lastModified + "; newer=" + isNewer)
     return isNewer
   }
@@ -68,7 +70,7 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
   private val formatter = new SimpleDateFormat("yyyy-MM-dd 'at' hh:mm:ss z")
 
   def downloadOne(outFile: File, node: S3ObjectSummary) = {
-    println("Downloading " + outFile + ", last modified " + formatter.format(node.getLastModified()) + ", " + node.getSize + " bytes.")
+    logger.info("Downloading " + outFile + ", last modified " + formatter.format(node.getLastModified()) + ", " + node.getSize + " bytes.")
     FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
     outFile.setLastModified(node.getLastModified().getTime)
   }

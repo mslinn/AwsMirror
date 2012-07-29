@@ -3,9 +3,11 @@ package com.micronautics.aws
 import com.micronautics.aws.Main._
 import Upload._
 import akka.dispatch.Future
+import org.slf4j.LoggerFactory
 
 /** Uploads on (at least) one thread, downloads on multiple threads */
 class Sync(args: Array[String]) {
+  private val logger = LoggerFactory.getLogger(getClass)
   if (!credentialPath.exists) {
     println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.path))
     System.exit(-1)
