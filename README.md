@@ -51,7 +51,7 @@ sbt compile start-script
 # Ensure that Java 7 is on the classpath; best if JAVA_HOME is also set
 # Must set SBT_HOME to directory where sbt-launch.jar resides
 export SBT_HOME=/opt
-~/work/awsMirror/target/start $*
+~/work/AwsMirror/target/start $*
 ````
 
 ## To Run ##
