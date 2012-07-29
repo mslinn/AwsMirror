@@ -113,9 +113,15 @@ public class S3 {
 
     public LinkedList<S3ObjectSummary> getAllObjectData(String bucketName, String prefix) {
         LinkedList<S3ObjectSummary> result = new LinkedList<S3ObjectSummary>();
+        boolean more = true;
         ObjectListing objectListing = s3.listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix));
-        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
-            result.add(objectSummary);
+        while (more) {
+            for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
+                result.add(objectSummary);
+            more = objectListing.isTruncated();
+            if (more)
+                objectListing = s3.listNextBatchOfObjects(objectListing);
+        }
         return result;
     }
 

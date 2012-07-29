@@ -84,7 +84,7 @@ public class Uploader extends DirectoryWalker<File> {
     protected boolean ignore(File file) {
         for (Pattern pattern : ignoredPatterns)
             if (pattern.matcher(file.getName()).matches()) {
-                System.out.println("Ignoring " + file.getName());
+                System.out.println("Uploader ignoring " + file.getName());
                 return true;
             }
         return false;
@@ -93,7 +93,7 @@ public class Uploader extends DirectoryWalker<File> {
     @Override protected boolean handleDirectory(File directory, int depth, Collection results) {
         boolean ignore = ignore(directory);
         if (ignore)
-            System.out.println("Ignoring " + directory.getName());
+            System.out.println("Uploader ignoring " + directory.getName());
         return !ignore;
     }
 
@@ -103,11 +103,11 @@ public class Uploader extends DirectoryWalker<File> {
             boolean s3Older = s3FileIsOlder(file, path);
             //System.out.println("overwrite=" + overwrite + "; s3Older=" + s3Older + "; " + file.getAbsolutePath());
             if (ignore(file)) {
-                System.out.println("Ignoring " + path);
+                System.out.println("Uploader ignoring " + path);
                 return;
             }
             if (!overwrite && !s3Older) {
-                System.out.println("Skipping " + path);
+                System.out.println("Uploader skipping " + path);
                 return;
             }
             System.out.println("Uploading " + path + " to " + bucketName);
@@ -119,7 +119,11 @@ public class Uploader extends DirectoryWalker<File> {
     }
 
     private String canonicalPath(File file) throws IOException {
-        return file.getCanonicalPath().substring(treeRootStrLen).replace('\\', '/');
+        String path = file.getCanonicalPath().substring(treeRootStrLen).replace('\\', '/');
+        if (path.startsWith("/") || path.startsWith("\\"))
+            return path.substring(1);
+        else
+            return path;
     }
 
     private class UploadOne implements Callable<PutObjectResult> {
