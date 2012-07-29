@@ -102,12 +102,12 @@ public class Uploader extends DirectoryWalker<File> {
             String path = canonicalPath(file);
             boolean s3Older = s3FileIsOlder(file, path);
             //System.out.println("overwrite=" + overwrite + "; s3Older=" + s3Older + "; " + file.getAbsolutePath());
-            if (!overwrite && !s3Older) {
-                System.out.println("Skipping " + path);
-                return;
-            }
             if (ignore(file)) {
                 System.out.println("Ignoring " + path);
+                return;
+            }
+            if (!overwrite && !s3Older) {
+                System.out.println("Skipping " + path);
                 return;
             }
             System.out.println("Uploading " + path + " to " + bucketName);
