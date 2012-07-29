@@ -103,11 +103,17 @@ public class S3 {
     * additional results. */
     public String[] listObjectsByPrefix(String bucketName, String prefix) {
         LinkedList<String> result = new LinkedList<String>();
+        boolean more = true;
         ObjectListing objectListing = s3.listObjects(new ListObjectsRequest()
                 .withBucketName(bucketName)
                 .withPrefix(prefix));
-        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
-            result.add(objectSummary.getKey() + " (size = " + objectSummary.getSize() + ")");
+        while (more) {
+            for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
+                result.add(objectSummary.getKey() + " (size = " + objectSummary.getSize() + ")");
+            more = objectListing.isTruncated();
+            if (more)
+                objectListing = s3.listNextBatchOfObjects(objectListing);
+        }
         return result.toArray(new String[result.size()]);
     }
 
