@@ -18,9 +18,6 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
     val results = new ArrayList[File]()
     val allNodes = s3.getAllObjectData(bucketName, null) // get every object
     allNodes foreach { node: S3ObjectSummary =>
-      println(node.getKey)
-    }
-    allNodes foreach { node: S3ObjectSummary =>
       val outFileName: String = if (node.getKey.startsWith("/") || node.getKey.startsWith("\\"))
                 node.getKey.substring(1) else node.getKey
       val outFile: File = new File(outFileName)
