@@ -12,12 +12,12 @@ import org.apache.commons.io.DirectoryWalker;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
 
 public class Uploader extends DirectoryWalker<File> {
     boolean overwrite;
@@ -28,11 +28,13 @@ public class Uploader extends DirectoryWalker<File> {
     MessageDispatcher dispatcher = Main.system().dispatcher();
     private final ArrayList<Future<PutObjectResult>> futures = new ArrayList<Future<PutObjectResult>>();
     LinkedList<S3ObjectSummary> allNodes;
+    List<Pattern> ignoredPatterns;
 
-    public Uploader(Credentials credentials, String bucketName, boolean overwrite) {
+    public Uploader(Credentials credentials, String bucketName, List<Pattern> ignoredPatterns, boolean overwrite) {
         super();
         this.credentials = credentials;
         this.bucketName = bucketName;
+        this.ignoredPatterns = ignoredPatterns;
         this.overwrite = overwrite;
         s3 = new S3(credentials.accessKey(), credentials.secretKey());
     }
@@ -79,9 +81,23 @@ public class Uploader extends DirectoryWalker<File> {
         return isOlder;
     }
 
-    private ArrayList<String> ignoredFileNames = new ArrayList<String>(Arrays.asList(".s3", ".git", ".aws", ".svn"));
+    protected boolean ignore(File file) {
+        for (Pattern pattern : ignoredPatterns)
+            if (pattern.matcher(file.getName()).matches()) {
+                System.out.println("Ignoring " + file.getName());
+                return true;
+            }
+        return false;
+    }
 
-    protected void handleFile(File file, int depth, Collection results) {
+    @Override protected boolean handleDirectory(File directory, int depth, Collection results) {
+        boolean ignore = ignore(directory);
+        if (ignore)
+            System.out.println("Ignoring " + directory.getName());
+        return !ignore;
+    }
+
+    @Override protected void handleFile(File file, int depth, Collection results) {
         try {
             String path = canonicalPath(file);
             boolean s3Older = s3FileIsOlder(file, path);
@@ -90,7 +106,7 @@ public class Uploader extends DirectoryWalker<File> {
                 System.out.println("Skipping " + path);
                 return;
             }
-            if (ignoredFileNames.contains(file.getName())) {
+            if (ignore(file)) {
                 System.out.println("Ignoring " + path);
                 return;
             }

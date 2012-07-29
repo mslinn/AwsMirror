@@ -5,6 +5,8 @@ import scala.Some
 import java.nio.file.Paths
 import java.io.File
 import Upload._
+import java.util.regex.Pattern
+import collection.JavaConversions._
 
 object Upload {
   /** Upload entire tree to bucket specified in .s3 file in this directory or parent;
@@ -43,8 +45,8 @@ object Upload {
     new DirectoryWatcher(watchPath).watch()
   }
 
-  def upload(credentials: Credentials, bucketName: String, s3File: File, overwrite: Boolean = true): Unit = {
-    new Uploader(credentials, bucketName, overwrite).upload(s3File.getParentFile)
+  def upload(credentials: Credentials, bucketName: String, s3File: File, ignoredPatterns: Seq[Pattern], overwrite: Boolean = true): Unit = {
+    new Uploader(credentials, bucketName, ignoredPatterns, overwrite).upload(s3File.getParentFile)
     uploadContinuously(s3File)
   }
 }
@@ -58,7 +60,7 @@ class Upload(args: Array[String]) {
   args.length match {
     case 1 =>
       val (credentials, s3fileObject, s3File) = retrieveParams
-      upload(credentials, s3fileObject.bucketName, s3File)
+      upload(credentials, s3fileObject.bucketName, s3File, s3fileObject.ignoredRegexes)
 
     case _ =>
       println("Error: Too many arguments provided for upload")

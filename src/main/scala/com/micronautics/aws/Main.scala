@@ -7,6 +7,7 @@ import io.Source
 import akka.actor.ActorSystem
 import scalax.io.Codec
 import org.joda.time.format.DateTimeFormat
+import com.codahale.jerkson.ParsingException
 
 object Main extends App {
   def credentialPath: Path = Path(new File(sys.env("HOME"))) / ".aws"
@@ -172,7 +173,14 @@ object Main extends App {
   }
 
   /** @return S3File from parsing JSON in given `.s3` file */
-  def parseS3File(file: File): S3File = parse[S3File](Path(file).slurpString(Codec.UTF8))
+  def parseS3File(file: File): S3File = try {
+    parse[S3File](Path(file).slurpString(Codec.UTF8))
+  } catch {
+    case e =>
+      println("Error parsing " + file.getAbsolutePath + ":\n" + e.getMessage)
+      sys.exit(-2)
+      null
+  }
 
   /** Interactive prompt/reply */
   def prompt(msg: String, defaultValue: String=null): String = {
@@ -195,9 +203,9 @@ object Main extends App {
   }
 
   /**
-    * Write `.s3` file
-    * @return String indicating when last synced, if ever synced
-    */
+   * Write `.s3` file
+   * @return String indicating when last synced, if ever synced
+   */
   // todo figure out how to pretty print
   def writeS3(newS3File: S3File): String = {
     val synced = newS3File.lastSyncOption match {
