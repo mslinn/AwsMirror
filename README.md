@@ -22,14 +22,14 @@ These hidden files are ignored by this program; users never see them because the
 
 ### Start Script ###
 
-The compiled program needs to be run from a script.
-`xsbt-start-script-plugin` creates that script.
+The compiled program needs to be run from a script. `xsbt-start-script-plugin` creates that script.
 See [my suggestion](https://github.com/typesafehub/xsbt-start-script-plugin/issues/17) on how to improve the generated script.
 If you install my modified version of `xsbt-start-script-plugin` then you should be able to run the script from any directory.
 To do that:
 
 ````
-git clone git://github.com/mslinn/xsbt-start-script-plugin.git`
+git clone git://github.com/mslinn/xsbt-start-script-plugin.git
+cd xsbt-start-script-plugin
 sbt compile publish-local
 ````
 
