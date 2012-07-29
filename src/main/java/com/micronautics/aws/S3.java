@@ -95,12 +95,7 @@ public class S3 {
         return object.getObjectContent();
     }
 
-    /** List objects in your bucket by prefix - There are many options for
-    * listing the objects in your bucket.  Keep in mind that buckets with
-    * many objects might truncate their results when listing their objects,
-    * so be sure to check if the returned object listing is truncated, and
-    * use the AmazonS3.listNextBatchOfObjects(...) operation to retrieve
-    * additional results. */
+    /** List objects in given bucketName by prefix. */
     public String[] listObjectsByPrefix(String bucketName, String prefix) {
         LinkedList<String> result = new LinkedList<String>();
         boolean more = true;
