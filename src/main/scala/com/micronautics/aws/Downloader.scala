@@ -7,6 +7,7 @@ import scala.collection.JavaConversions._
 import org.apache.commons.io.FileUtils
 import akka.dispatch.{ExecutionContext, Await, Future}
 import collection.mutable
+import java.text.SimpleDateFormat
 
 /** Downloads on multiple threads */
 class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolean) {
@@ -64,8 +65,10 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
     return isNewer
   }
 
+  private val formatter = new SimpleDateFormat("yyyy-MM-dd 'at' hh:mm:ss z")
+
   def downloadOne(outFile: File, node: S3ObjectSummary) = {
-    println("Downloading " + outFile + ", last modified " + node.getLastModified() + ", " + node.getSize + " bytes.")
+    println("Downloading " + outFile + ", last modified " + formatter.format(node.getLastModified()) + ", " + node.getSize + " bytes.")
     FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
     outFile.setLastModified(node.getLastModified().getTime)
   }
