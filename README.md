@@ -1,5 +1,7 @@
 # Update AWS S3 content from local directory tree #
 
+This project was sponsored by [Micronautics Research Corporation](http://www.micronauticsresearch.com/)
+
 ## Use Case ##
  1. Not using source control.
  2. Storing content on AWS S3 (CDN).
