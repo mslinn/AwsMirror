@@ -5,7 +5,7 @@
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default
          See http://logback.qos.ch/manual/layouts.html -->
     <encoder>
-      <pattern>%date{mm:ss.SSS} %thread %logger{0}: %msg%n</pattern>
+      <pattern>%msg%n</pattern>
     </encoder>
   </appender>
 
