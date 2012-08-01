@@ -1,5 +1,3 @@
-// see https://github.com/sbt/sbt-assembly
-//import AssemblyKeys._ // put this at the top of the file
 
 import com.typesafe.startscript.StartScriptPlugin
 
@@ -18,7 +16,7 @@ javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
 scalacOptions in (Compile, doc) <++= baseDirectory.map {
   (bd: File) => Seq[String](
      "-sourcepath", bd.getAbsolutePath,
-     "-doc-source-url", "https://bitbucket.org/mslinn/akkafutures/src/9fa9548ce587/akkaFutures�{FILE_PATH}.scala"
+     "-doc-source-url", "https://github.com/mslinn/AwsMirror/tree/master€{FILE_PATH}.scala"
   )
 }
 
@@ -39,8 +37,6 @@ libraryDependencies ++= Seq(
   "org.slf4j"                     %  "slf4j-api"           % "1.6.5"  withSources()
 )
 
-//seq(assemblySettings: _*)
-
 seq(StartScriptPlugin.startScriptForClassesSettings: _*)
 
 logLevel := Level.Error
@@ -50,10 +46,7 @@ logLevel := Level.Error
 // define the statements initially evaluated when entering 'console', 'console-quick', or 'console-project'
 initialCommands := """
   import java.net.URL
-  import java.util.concurrent.Executors
   import java.util.Date
-  import scala.MatchError
-  import scala.util.Random
   import scalax.io.JavaConverters.asInputConverter
   import scalax.io.Codec
   """
