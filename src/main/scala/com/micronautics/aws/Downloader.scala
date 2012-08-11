@@ -14,12 +14,14 @@
 
 package com.micronautics.aws
 
+import Util._
+import Model._
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import java.io.{IOException, File}
-import java.util.{Date, ArrayList}
+import java.util.ArrayList
 import scala.collection.JavaConversions._
 import org.apache.commons.io.FileUtils
-import akka.dispatch.{ExecutionContext, Await, Future}
+import akka.dispatch.{ExecutionContext, Future}
 import collection.mutable
 import java.text.SimpleDateFormat
 import org.slf4j.LoggerFactory
@@ -29,6 +31,7 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
   private[aws] val s3 = new S3(credentials.accessKey, credentials.secretKey)
   private val futures = mutable.ListBuffer.empty[Future[Boolean]]
   private implicit val dispatcher: ExecutionContext = Main.system.dispatcher
+  private val logger = LoggerFactory.getLogger(getClass)
 
   def download(localDir: File): ArrayList[File] = {
     val results = new ArrayList[File]()
@@ -49,15 +52,28 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
           val overwriteExisting: Boolean = !(file.exists()) || overwrite
           if (outFile.getParent!=null && overwriteExisting)
             outFile.getParentFile.mkdirs
-          val s3FileNewer = s3FileIsNewer(file, node)
           if (!outFileName.endsWith("$folder$")) {
-            if (overwriteExisting  && s3FileNewer)
-              futures += Future(downloadOne(outFile, node))
-            else {
-              logger.debug((if (compareS3FileAge(file, node)==0)
-                  "Remote copy of %s is the same age as the local copy, so it was not downloaded"
-                then
-                  "Remote copy of %s is older than the local copy, so it was not downloaded").format(outFileName))
+            compareS3FileAge(file, node) match {
+              case r: Int if r==s3FileDoesNotExist =>
+                logger.debug("Remote copy of %s does not exist, so it was not downloaded.".format(outFileName))
+
+              case r: Int if r==s3FileIsOlderThanLocal =>
+                logger.debug("Remote copy of %s is older than the local copy (%s), so it was not downloaded.".format(formatter.format(node.getLastModified), outFileName))
+
+              case r: Int if r==s3FileSameAgeAsLocal =>
+                if (overwriteExisting) {
+                  futures += Future(downloadOne(outFile, node))
+                  logger.debug("Downloading because the remote copy of %s is the same age as the local copy and overwrite is enabled.".format(outFileName))
+                } else
+                  logger.debug("Remote copy of %s is the same age as the local copy and overwrite is disabled, so it was not downloaded.".format(outFileName))
+
+              case r: Int if r==s3FileNewerThanLocal =>
+                futures += Future(downloadOne(outFile, node))
+                logger.debug("Downloading because the remote copy of '%s' is newer (%s) than the local copy.".format(outFile.getName, formatter.format(node.getLastModified)))
+
+              case r: Int if r==s3FileDoesNotExistLocally =>
+                futures += Future(downloadOne(outFile, node))
+                logger.debug("Downloading because %s does not exist locally.".format(outFileName))
             }
           }
         }
@@ -75,33 +91,10 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
     path.substring(basePath.length+1)
   }
 
-  def s3FileIsNewer(file: File, node: S3ObjectSummary): Boolean = {
-    if (!file.exists)
-      return true
-
-    val s3NodeLastModified: Date = node.getLastModified
-    val isNewer: Boolean = s3NodeLastModified.getTime > file.lastModified
-//    logger.debug("s3NodeLastModified.getTime()=" + s3NodeLastModified.getTime +
-//      "; file.lastModified()=" + file.lastModified + "; newer=" + isNewer)
-    return isNewer
-  }
-
-  /** @return -1 if s3File is older or does not exist, 0 if same age as local file, 1 if remote file is newer */
-  def compareS3FileAge(file: File, node: S3ObjectSummary): Int = {
-      if (!file.exists)
-        return -1
-
-      val s3NodeLastModified: Date = node.getLastModified
-      val result: Int = if (s3NodeLastModified.getTime == file.lastModified) 0
-        else if (s3NodeLastModified.getTime < file.lastModified) 1
-        else -1
-      result
-    }
-
   private val formatter = new SimpleDateFormat("yyyy-MM-dd 'at' hh:mm:ss z")
 
   def downloadOne(outFile: File, node: S3ObjectSummary) = {
-    logger.info("Downloading " + outFile + ", last modified " + formatter.format(node.getLastModified()) + ", " + node.getSize + " bytes.")
+    logger.info("Downloading " + outFile + ", last modified " + formatter.format(node.getLastModified) + ", " + node.getSize + " bytes.")
     FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
     outFile.setLastModified(node.getLastModified().getTime)
   }
