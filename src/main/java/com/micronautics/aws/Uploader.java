@@ -110,10 +110,13 @@ public class Uploader extends DirectoryWalker<File> {
                 return;
             }
             if (!overwrite && !s3Older) {
-                logger.debug("Uploader skipping " + path);
+                if (s3Older)
+                  logger.debug("Uploader skipping " + path + " because the local copy is older");
+                else
+                    logger.debug("Uploader skipping " + path + " because overwrite is disabled");
                 return;
             }
-            logger.info("Uploading " + path + " to " + bucketName);
+            logger.info("Uploading " + path + " to " + bucketName); // todo display absolute upload path
             final Future<PutObjectResult> future = Futures.future(new UploadOne(bucketName, path, file), dispatcher);
             futures.add(future);
         } catch (IOException e) {

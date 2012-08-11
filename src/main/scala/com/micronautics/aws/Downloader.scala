@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory
 
 /** Downloads on multiple threads */
 class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolean) {
-  private val logger = LoggerFactory.getLogger(getClass)
   private[aws] val s3 = new S3(credentials.accessKey, credentials.secretKey)
   private val futures = mutable.ListBuffer.empty[Future[Boolean]]
   private implicit val dispatcher: ExecutionContext = Main.system.dispatcher
@@ -54,8 +53,12 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
           if (!outFileName.endsWith("$folder$")) {
             if (overwriteExisting  && s3FileNewer)
               futures += Future(downloadOne(outFile, node))
-            else
-              logger.debug("Remote copy of %s is not newer, so it was not downloaded".format(outFileName))
+            else {
+              logger.debug((if (compareS3FileAge(file, node)==0)
+                  "Remote copy of %s is the same age as the local copy, so it was not downloaded"
+                then
+                  "Remote copy of %s is older than the local copy, so it was not downloaded").format(outFileName))
+            }
           }
         }
       } catch {
@@ -73,13 +76,27 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
   }
 
   def s3FileIsNewer(file: File, node: S3ObjectSummary): Boolean = {
-    if (!file.exists) return true
+    if (!file.exists)
+      return true
+
     val s3NodeLastModified: Date = node.getLastModified
     val isNewer: Boolean = s3NodeLastModified.getTime > file.lastModified
 //    logger.debug("s3NodeLastModified.getTime()=" + s3NodeLastModified.getTime +
 //      "; file.lastModified()=" + file.lastModified + "; newer=" + isNewer)
     return isNewer
   }
+
+  /** @return -1 if s3File is older or does not exist, 0 if same age as local file, 1 if remote file is newer */
+  def compareS3FileAge(file: File, node: S3ObjectSummary): Int = {
+      if (!file.exists)
+        return -1
+
+      val s3NodeLastModified: Date = node.getLastModified
+      val result: Int = if (s3NodeLastModified.getTime == file.lastModified) 0
+        else if (s3NodeLastModified.getTime < file.lastModified) 1
+        else -1
+      result
+    }
 
   private val formatter = new SimpleDateFormat("yyyy-MM-dd 'at' hh:mm:ss z")
 
