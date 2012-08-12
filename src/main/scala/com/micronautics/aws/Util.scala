@@ -27,9 +27,9 @@ object Util {
       val result: Int = if (s3NodeLastModified.getTime == file.lastModified)
           s3FileSameAgeAsLocal
         else if (s3NodeLastModified.getTime < file.lastModified)
-          s3FileNewerThanLocal
-        else
           s3FileIsOlderThanLocal
+        else
+          s3FileNewerThanLocal
       result
     }
 
