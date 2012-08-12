@@ -61,7 +61,7 @@ object Upload {
 
   def upload(credentials: Credentials, bucketName: String, s3File: File, ignoredPatterns: Seq[Pattern], overwrite: Boolean = false): Unit = {
     new Uploader(credentials, bucketName, ignoredPatterns, overwrite).upload(s3File.getParentFile)
-    uploadContinuously(s3File, ignoredPatterns)
+    uploadContinuously(s3File.getParentFile, ignoredPatterns)
   }
 }
 

@@ -137,7 +137,14 @@ public class Uploader extends DirectoryWalker<File> {
 
         @Override
         public PutObjectResult call() {
-            return s3.uploadFile(bucketName, path, file);
+            try {
+                PutObjectResult result = s3.uploadFile(bucketName, path, file);
+                logger.info(path + " uploaded.");
+                return result;
+            } catch (Exception e) {
+                logger.warn(path + ": " + e.getMessage());
+            }
+            return new PutObjectResult();
         }
     }
 }
