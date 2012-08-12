@@ -93,7 +93,7 @@ public class Uploader extends DirectoryWalker<File> {
                       break;
 
                   case s3FileSameAgeAsLocal:
-                      if (overwrite) {
+                      if (!overwrite) {
                           logger.debug("Uploader skipping " + path + " because it is the same age as the local copy and overwrite is disabled");
                           return;
                       }
