@@ -53,5 +53,5 @@ object AuthAction extends Enumeration {
  }
 
 case class S3File(accountName: String, bucketName: String, lastSyncOption: Option[DateTime]=None, ignores: Seq[String]=AWS.defaultIgnores) {
-  @JsonIgnore val ignoredRegexes: Seq[Pattern] = ignores.map { x => Pattern.compile(x) }
+  @JsonIgnore val ignoredPatterns: Seq[Pattern] = ignores.map { x => Pattern.compile(x) }
 }

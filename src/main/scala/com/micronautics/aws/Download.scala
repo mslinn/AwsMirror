@@ -15,10 +15,7 @@
 package com.micronautics.aws
 
 import com.micronautics.aws.Main._
-import com.codahale.jerkson.Json._
 import scala.Some
-import scalax.file.Path
-import scalax.io.Codec
 
 class Download(args: Array[String]) {
   if (!credentialPath.exists) {
@@ -47,7 +44,10 @@ class Download(args: Array[String]) {
                 println("Error: AWS account %s does not define bucket %s".format(s3File.accountName, s3File.bucketName))
                 System.exit(-1)
               }
-              new Downloader(credentials, s3File.bucketName, true).download(file.getParentFile)
+              Model.credentials = credentials
+              Model.bucketName = s3File.bucketName
+              Model.s3 = s3
+              new Downloader(true).download(file.getParentFile)
           }
       }
 

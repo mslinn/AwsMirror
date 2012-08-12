@@ -26,7 +26,7 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable
 
 /** Downloads on multiple threads */
-class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolean) {
+class Downloader(overwrite: Boolean) {
   private[aws] val s3 = new S3(credentials.accessKey, credentials.secretKey)
   private val futures = mutable.ListBuffer.empty[Future[Boolean]]
   private implicit val dispatcher: ExecutionContext = Main.system.dispatcher

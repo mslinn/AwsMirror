@@ -21,7 +21,6 @@ import io.Source
 import akka.actor.ActorSystem
 import scalax.io.Codec
 import org.joda.time.format.DateTimeFormat
-import com.codahale.jerkson.ParsingException
 
 object Main extends App {
   def credentialPath: Path = Path(new File(sys.env("HOME"))) / ".aws"

@@ -26,17 +26,11 @@ public class Uploader extends DirectoryWalker<File> {
     private Logger logger = LoggerFactory.getLogger(getClass());
     boolean overwrite;
     int treeRootStrLen;
-    Credentials credentials;
-    S3 s3;
-    String bucketName;
     MessageDispatcher dispatcher = Main.system().dispatcher();
     private final ArrayList<Future<PutObjectResult>> futures = new ArrayList<Future<PutObjectResult>>();
 
-    public Uploader(Credentials credentials, String bucketName, List<Pattern> ignoredPatterns, boolean overwrite) {
+    public Uploader(boolean overwrite) {
         super();
-        this.credentials = credentials;
-        this.bucketName = bucketName;
-        Model.ignoredPatterns = ignoredPatterns;
         this.overwrite = overwrite;
         s3 = new S3(credentials.accessKey(), credentials.secretKey());
     }
@@ -109,7 +103,7 @@ public class Uploader extends DirectoryWalker<File> {
                       logger.debug("Uploader cannot upload " + path + " because the local copy does not exist");
                       return;
             }
-            final Future<PutObjectResult> future = Futures.future(new UploadOne(bucketName, path, file), dispatcher);
+            final Future<PutObjectResult> future = Futures.future(new UploadOne(path, file), dispatcher);
             futures.add(future);
         } catch (IOException e) {
             System.err.println(e.getMessage());
@@ -123,28 +117,30 @@ public class Uploader extends DirectoryWalker<File> {
         else
             return path;
     }
+}
 
-    private class UploadOne implements Callable<PutObjectResult> {
-        private String bucketName;
-        private String path;
-        private File file;
+class UploadOne implements Callable<PutObjectResult> {
+    private Logger logger = LoggerFactory.getLogger(getClass());
+    private String bucketName;
+    private String key;
+    private File file;
 
-        public UploadOne(String bucketName, String path, File file) {
-            this.bucketName = bucketName;
-            this.path = path;
-            this.file = file;
+    public UploadOne(String key, File file) {
+        this.bucketName = Model.bucketName;
+        this.key = key;
+        this.file = file;
+    }
+
+    @Override
+    /**  */
+    public PutObjectResult call() {
+        try {
+            PutObjectResult result = s3.uploadFile(bucketName, key, file);
+            logger.info(key + " uploaded.");
+            return result;
+        } catch (Exception e) {
+            logger.warn(key + ": " + e.getMessage());
         }
-
-        @Override
-        public PutObjectResult call() {
-            try {
-                PutObjectResult result = s3.uploadFile(bucketName, path, file);
-                logger.info(path + " uploaded.");
-                return result;
-            } catch (Exception e) {
-                logger.warn(path + ": " + e.getMessage());
-            }
-            return new PutObjectResult();
-        }
+        return new PutObjectResult();
     }
 }

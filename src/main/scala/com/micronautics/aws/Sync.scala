@@ -18,6 +18,7 @@ import com.micronautics.aws.Main._
 import Upload._
 import akka.dispatch.Future
 import org.slf4j.LoggerFactory
+import scala.collection.JavaConversions._
 
 /** Uploads on (at least) one thread, downloads on multiple threads */
 class Sync(args: Array[String]) {
@@ -34,8 +35,12 @@ class Sync(args: Array[String]) {
       // Error if no .s3 file or bucket does not exist
 
       val (credentials, s3fileObject, s3File) = retrieveParams
-      new Downloader(credentials, s3fileObject.bucketName, false).download(s3File.getParentFile)
-      Future(upload(credentials, s3fileObject.bucketName, s3File, s3fileObject.ignoredRegexes, false))(Main.system.dispatcher)
+      Model.bucketName = s3fileObject.bucketName
+      Model.credentials = credentials
+      Model.ignoredPatterns = s3fileObject.ignoredPatterns
+      Model.s3 = s3fileObject.get
+      new Downloader(false).download(s3File.getParentFile)
+      Future(upload(s3File, false))(Main.system.dispatcher)
 
     case _ =>
       println("Error: Too many arguments provided for sync")

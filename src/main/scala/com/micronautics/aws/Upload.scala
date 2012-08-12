@@ -53,15 +53,15 @@ object Upload {
   }
 
   /** Continue uploading until Control-C */
-  def uploadContinuously(root: File, ignoredPatterns: Seq[Pattern]): Unit = {
+  def uploadContinuously(root: File): Unit = {
     println("Monitoring %s for changes to upload; Control-C to stop".format(root.getCanonicalPath))
-    val watchPath = Paths.get(root.getParent)
-    new DirectoryWatcher(watchPath, ignoredPatterns).watch()
+    val watchPath = Paths.get(root.getAbsolutePath)
+    new DirectoryWatcher(watchPath).watch()
   }
 
-  def upload(credentials: Credentials, bucketName: String, s3File: File, ignoredPatterns: Seq[Pattern], overwrite: Boolean = false): Unit = {
-    new Uploader(credentials, bucketName, ignoredPatterns, overwrite).upload(s3File.getParentFile)
-    uploadContinuously(s3File.getParentFile, ignoredPatterns)
+  def upload(s3File: File, overwrite: Boolean = false): Unit = {
+    new Uploader(overwrite).upload(s3File.getParentFile)
+    uploadContinuously(s3File.getParentFile)
   }
 }
 
@@ -74,7 +74,11 @@ class Upload(args: Array[String]) {
   args.length match {
     case 1 =>
       val (credentials, s3fileObject, s3File) = retrieveParams
-      upload(credentials, s3fileObject.bucketName, s3File, s3fileObject.ignoredRegexes)
+      Model.bucketName = s3fileObject.bucketName
+      Model.ignoredPatterns = s3fileObject.ignoredPatterns
+      Model.credentials = credentials
+      Model.s3 = s3fileObject.get
+      upload(s3File)
 
     case _ =>
       println("Error: Too many arguments provided for upload")

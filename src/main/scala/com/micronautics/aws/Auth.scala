@@ -15,7 +15,6 @@
 package com.micronautics.aws
 
 import com.micronautics.aws.AuthAction._
-import io.Source
 import com.codahale.jerkson.Json._
 import scala.Some
 import Main._
