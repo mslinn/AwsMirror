@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 
 import static com.micronautics.aws.Model.*;
 import static com.micronautics.aws.Util.compareS3FileAge;
+import static com.micronautics.aws.Util.dtFmt;
 
 public class Uploader extends DirectoryWalker<File> {
     private Logger logger = LoggerFactory.getLogger(getClass());
@@ -89,7 +90,7 @@ public class Uploader extends DirectoryWalker<File> {
                       break;
 
                   case s3FileIsOlderThanLocal:
-                      logger.info("Uploading " + path + " to " + bucketName + " because the remote copy is older");
+                      logger.info("Uploading " + path + "(" + dtFmt(file.lastModified()) + ") to " + bucketName + " because the remote copy is older");
                       break;
 
                   case s3FileSameAgeAsLocal:

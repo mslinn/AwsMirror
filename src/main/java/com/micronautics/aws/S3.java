@@ -9,8 +9,8 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 
 import java.io.*;
+import java.util.Date;
 import java.util.LinkedList;
-import java.util.List;
 
 public class S3 {
     private AmazonS3 s3;
@@ -61,14 +61,18 @@ public class S3 {
         return result.toArray(new String[result.size()]);
     }
 
-    /** Upload a file to your bucket - You can easily upload a file to
-    * S3, or upload directly an InputStream if you know the length of
-    * the data in the stream. You can also specify your own metadata
-    * when uploading to S3, which allows you set a variety of options
-    * like content-type and content-encoding, plus additional metadata
-    * specific to your applications. */
+    /** Uploads a file to the specified bucket. The file's last-modified date is applied to the uploaded file */
     public PutObjectResult uploadFile(String bucketName, String key, File file) {
-        return s3.putObject(new PutObjectRequest(bucketName, key, file));
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setLastModified(new Date(file.lastModified()));
+        metadata.setContentLength(file.length());
+        try {
+            InputStream inputStream = new FileInputStream(file);
+            return s3.putObject(new PutObjectRequest(bucketName, key, inputStream, metadata));
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return new PutObjectResult();
+        }
     }
 
     /** @param key not sure what this is for; might it be a directory name?

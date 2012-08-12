@@ -5,11 +5,17 @@ import java.io.File
 import java.util.Date
 import scala.collection.JavaConversions._
 import Model._
+import java.text.SimpleDateFormat
 
 
 /**
  * @author Mike Slinn */
 object Util {
+  val dateFormat = new SimpleDateFormat("yyyy-MM-dd 'at' hh:mm:ss z")
+
+  def dtFmt(time: Long): String = dateFormat.format(new Date(time))
+
+  def dtFmt(date: Date): String = dateFormat.format(date)
 
   /** @return -2 if s3File does not exist,
    *          -1 if s3File is older than local copy,

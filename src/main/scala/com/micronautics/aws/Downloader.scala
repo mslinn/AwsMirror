@@ -14,17 +14,16 @@
 
 package com.micronautics.aws
 
-import Util._
 import Model._
+import Util._
+import akka.dispatch.{ ExecutionContext, Future }
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import java.io.{ IOException, File }
-import java.util.{ ArrayList, Date }
-import scala.collection.JavaConversions._
+import java.util.ArrayList
 import org.apache.commons.io.FileUtils
-import akka.dispatch.{ ExecutionContext, Future }
-import collection.mutable
-import java.text.SimpleDateFormat
 import org.slf4j.LoggerFactory
+import scala.collection.JavaConversions._
+import scala.collection.mutable
 
 /** Downloads on multiple threads */
 class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolean) {
@@ -59,7 +58,7 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
 
               case r: Int if r==s3FileIsOlderThanLocal =>
                 logger.debug("Remote copy of '%s' is older (%s) than the local copy at '%s' (%s), so it was not downloaded.".
-                  format(node.getKey, formatter.format(node.getLastModified), file.getAbsolutePath, formatter.format(new Date(file.lastModified))))
+                  format(node.getKey, dtFmt(node.getLastModified), file.getAbsolutePath, dtFmt(file.lastModified)))
 
               case r: Int if r==s3FileSameAgeAsLocal =>
                 if (overwriteExisting) {
@@ -70,7 +69,7 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
 
               case r: Int if r==s3FileNewerThanLocal =>
                 logger.debug("Downloading '%s' to '%s' because the remote copy is newer (%s) than the local copy (%s).".
-                  format(node.getKey, file.getAbsolutePath, formatter.format(node.getLastModified), formatter.format(new Date(file.lastModified))))
+                  format(node.getKey, file.getAbsolutePath, dtFmt(node.getLastModified), dtFmt(file.lastModified)))
                 futures += Future(downloadOne(node, file))
 
               case r: Int if r==s3FileDoesNotExistLocally =>
@@ -93,10 +92,8 @@ class Downloader(credentials: Credentials, bucketName: String, overwrite: Boolea
     path.substring(basePath.length+1)
   }
 
-  private val formatter = new SimpleDateFormat("yyyy-MM-dd 'at' hh:mm:ss z")
-
   def downloadOne(node: S3ObjectSummary, outFile: File) = {
-    logger.info("Downloading '" + node.getKey + "' to '" + outFile.getAbsolutePath + "', last modified " + formatter.format(node.getLastModified) + ", " + node.getSize + " bytes.")
+    logger.info("Downloading '" + node.getKey + "' to '" + outFile.getAbsolutePath + "', last modified " + dtFmt(node.getLastModified) + ", " + node.getSize + " bytes.")
     FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
     outFile.setLastModified(node.getLastModified().getTime)
   }
