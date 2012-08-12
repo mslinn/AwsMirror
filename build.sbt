@@ -9,7 +9,7 @@ version := "0.1.0-SNAPSHOT"
 
 scalaVersion := "2.9.2"
 
-scalacOptions ++= Seq("-deprecation")
+scalacOptions ++= Seq("-deprecation", "-unchecked")
 
 javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
 
