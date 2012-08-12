@@ -41,7 +41,9 @@ object AllCredentials {
 }
 
 object AWS {
-  val defaultIgnores = Seq(".*.tmp", ".git.*", "cvs", ".svn", ".*~")
+  // todo provide user-friendly means to edit the .s3 file regexes
+  /** Regexes; these get saved to .s3 files */
+  val defaultIgnores = Seq(".*~", ".*.aws", ".*.git", ".*.s3", ".*.svn", ".*.tmp", "cvs")
   var allCredentials = new AllCredentials()
 }
 

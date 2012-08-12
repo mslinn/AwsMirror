@@ -56,11 +56,13 @@ public class Uploader extends DirectoryWalker<File> {
     }
 
     protected boolean ignore(File file) {
-        for (Pattern pattern : Model.ignoredPatterns)
+        for (Pattern pattern : Model.ignoredPatterns) {
+            //System.out.println("pattern=" + pattern.toString() + "; file name=" + file.getName());
             if (pattern.matcher(file.getName()).matches()) {
                 logger.debug("Uploader ignoring " + file.getName());
                 return true;
             }
+        }
         return false;
     }
 
