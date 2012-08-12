@@ -85,11 +85,11 @@ public class Uploader extends DirectoryWalker<File> {
             if (!overwrite)
               switch (comparedAges) {
                   case s3FileDoesNotExist:
-                      logger.info("Uploading " + path + " to " + bucketName + " because it does not exist remotely"); // todo display absolute upload path
+                      logger.info("Uploading " + path + " to " + bucketName + " because it does not exist remotely");
                       break;
 
                   case s3FileIsOlderThanLocal:
-                      logger.info("Uploading " + path + " to " + bucketName + " because the remote copy is older"); // todo display absolute upload path
+                      logger.info("Uploading " + path + " to " + bucketName + " because the remote copy is older");
                       break;
 
                   case s3FileSameAgeAsLocal:
