@@ -34,8 +34,11 @@ class Downloader(overwrite: Boolean) {
 
   def download(localDir: File): ArrayList[File] = {
     val results = new ArrayList[File]()
-    val allNodes = s3.getAllObjectData(bucketName, null) // get every object
-    allNodes foreach { node: S3ObjectSummary =>
+    if (!Model.s3ObjectDataFetched) {
+      Model.allNodes = s3.getAllObjectData(bucketName, null) // get every object
+      Model.s3ObjectDataFetched = true
+    }
+    Model.allNodes foreach { node: S3ObjectSummary =>
       val outFileName: String = if (node.getKey.startsWith("/") || node.getKey.startsWith("\\"))
                 node.getKey.substring(1) else node.getKey
       val outFile: File = new File(outFileName)

@@ -21,4 +21,5 @@ public class Model {
     public static String bucketName;
     public static LinkedList<S3ObjectSummary> allNodes = new LinkedList<S3ObjectSummary>();
     public static List<Pattern> ignoredPatterns = new LinkedList<Pattern>();
+    public static boolean s3ObjectDataFetched = false;
 }

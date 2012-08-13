@@ -36,8 +36,10 @@ public class Uploader extends DirectoryWalker<File> {
     }
 
     public List<File> upload(File treeRoot) throws IOException {
-        // todo share allNodes with Downloader so sync does not fetch all objects twice
-        Model.allNodes = s3.getAllObjectData(bucketName, ""); // get every object
+        if (!Model.s3ObjectDataFetched) {
+            Model.allNodes = s3.getAllObjectData(bucketName, ""); // get every object
+            Model.s3ObjectDataFetched = true;
+        }
         treeRootStrLen = treeRoot.getCanonicalPath().length();
         ArrayList<File> results = new ArrayList<File>();
         walk(treeRoot, results);
