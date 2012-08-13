@@ -11,7 +11,7 @@ scalaVersion := "2.9.2"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
-javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
+javacOptions ++= Seq("-source", "1.6", "-target", "1.6", "-g:vars")
 
 scalacOptions in (Compile, doc) <++= baseDirectory.map {
   (bd: File) => Seq[String](
