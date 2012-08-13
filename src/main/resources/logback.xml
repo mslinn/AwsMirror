@@ -10,10 +10,10 @@
   </appender>
 
   <logger name="ch.qos.logback.classic"     level="WARNING" />
-  <logger name="com.micronautics.aws"       level="WARNING" />
+  <logger name="com.micronautics.aws"       level="ERROR" />
   <logger name="akka.actor.ActorSystemImpl" level="ERROR" />
 
-  <root level="WARNING">
+  <root level="ERROR">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

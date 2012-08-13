@@ -25,7 +25,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "ch.qos.logback"                %  "logback-classic"     % "1.0.0"  withSources(),
+  "ch.qos.logback"                %  "logback-classic"     % "1.0.6"  withSources(),
   "com.amazonaws"                 %  "aws-java-sdk"        % "1.3.13" withSources(),
   "commons-io"                    %  "commons-io"          % "2.4"    withSources(),
   "com.codahale"                  %  "jerkson_2.9.1"       % "0.5.0",
