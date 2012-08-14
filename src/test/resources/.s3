@@ -1,0 +1,1 @@
+{"accountName":"mslinn","bucketName":"ej-www","ignores":[".*~", ".*.aws", ".*.git", ".*.s3", ".*.svn", ".*.tmp", "cvs"], "endpointUrl":"http://ej-www.s3-website-us-east-1.amazonaws.com/"}

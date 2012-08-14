@@ -28,6 +28,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback"                %  "logback-classic"     % "1.0.6"  withSources(),
   "com.amazonaws"                 %  "aws-java-sdk"        % "1.3.13" withSources(),
   "commons-io"                    %  "commons-io"          % "2.4"    withSources(),
+  "commons-httpclient"            % "commons-httpclient"   % "3.1"    % "test" withSources(),
   "com.codahale"                  %  "jerkson_2.9.1"       % "0.5.0",
   "junit"                         %  "junit"               % "4.10"   % "test" withSources(),
   "com.github.scala-incubator.io" %  "scala-io-core_2.9.1" % "0.4.0"  withSources(),
