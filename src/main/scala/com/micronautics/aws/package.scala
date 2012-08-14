@@ -52,6 +52,12 @@ object AuthAction extends Enumeration {
    val add, delete, download, list, modify = Value
  }
 
-case class S3File(accountName: String, bucketName: String, lastSyncOption: Option[DateTime]=None, ignores: Seq[String]=AWS.defaultIgnores) {
+case class S3File(accountName: String,
+                  bucketName: String,
+                  lastSyncOption: Option[DateTime]=None,
+                  ignores: Seq[String]=AWS.defaultIgnores,
+                  endPoint: String = "s3-website-us-east-1.amazonaws.com") {
   @JsonIgnore val ignoredPatterns: Seq[Pattern] = ignores.map { x => Pattern.compile(x) }
+
+  def endpointUrl: String = "http://" + bucketName + "." + endPoint + "/";
 }

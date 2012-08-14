@@ -16,8 +16,16 @@ package com.micronautics.aws.bitBucket;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.micronautics.aws.Main;
 import com.micronautics.aws.S3;
+import com.micronautics.aws.S3File;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -28,6 +36,7 @@ import java.io.IOException;
 import java.util.Date;
 
 import static com.micronautics.aws.S3.relativize;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class S3Test {
@@ -41,7 +50,6 @@ public class S3Test {
     @BeforeClass
     public static void runBeforeClass() {
         s3.createBucket(bucketName);
-        s3.enableWebsite(bucketName);
     }
 
     @AfterClass
@@ -64,6 +72,18 @@ public class S3Test {
         S3ObjectSummary item = s3.getOneObjectData(bucketName, file1Name);
         assertTrue("Upload succeeded", null!=item);
         assertTrue("Upload key matches filename", item.getKey().compareTo(relativize(file1Name))==0);
+
+        S3File s3File = Main.readS3File();
+        assertTrue(".s3 file not found", null!=s3File);
+
+        HttpClient httpclient = new DefaultHttpClient();
+        HttpGet httpGet = new HttpGet(s3File.endpointUrl());
+        HttpResponse response = httpclient.execute(httpGet);
+        HttpEntity entity = response.getEntity();
+        if (entity != null && entity.getContentLength()>0) {
+            String contents = EntityUtils.toString(entity);
+            assertEquals(FileUtils.readFileToString(file1), contents);
+        }
 
         FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, file1Name), file2);
         assertTrue("Ensure downloaded file can be found", file2.exists());

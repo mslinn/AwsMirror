@@ -68,7 +68,9 @@ public class S3 {
      *
      * You can optionally specify a location for your bucket if you want to keep your data closer to your applications or users. */
     public Bucket createBucket(String bucketName) {
-        return s3.createBucket(bucketName);
+        Bucket bucket = s3.createBucket(bucketName);
+        enableWebsite(bucketName);
+        return bucket;
     }
 
     public void enableWebsite(String bucketName) {
@@ -79,6 +81,10 @@ public class S3 {
     public void enableWebsite(String bucketName, String errorPage) {
         BucketWebsiteConfiguration configuration = new BucketWebsiteConfiguration("index.html", errorPage);
         s3.setBucketWebsiteConfiguration(bucketName, configuration);
+    }
+
+    public String getBucketLocation(String bucketName) {
+        return s3.getBucketLocation(bucketName);
     }
 
     /** List the buckets in the account */
@@ -114,7 +120,7 @@ public class S3 {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(filesize);
         //metadata.setContentType("whatever");
-        //metadata.setContentEncoding("utf-8");
+        metadata.setContentEncoding("utf-8");
         //metadata.setCacheControl("cacheControl");
         s3.putObject(new PutObjectRequest(bucketName, key, stream, metadata));
     }

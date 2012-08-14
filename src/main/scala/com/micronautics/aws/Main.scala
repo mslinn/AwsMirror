@@ -105,6 +105,16 @@ object Main extends App {
   /** @return true if bucket exists for given or implicit AWS S3 account credentials */
   def bucketExists(bucketName: String)(implicit s3: S3): Boolean = s3.listBuckets().contains(bucketName)
 
+  def readS3File(): S3File = {
+    findS3File() match {
+      case None =>
+        null
+
+      case Some(file) =>
+        parseS3File(file)
+    }
+  }
+
   /**
     * Walk up from the current directory
     * @return Some(File) for first `.s3` file found, or None
