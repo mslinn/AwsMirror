@@ -108,8 +108,13 @@ You can add more AWS accounts by running the same command again.
     tree is associated with. It also stores the timestamp of the last sync. Its format is JSON.
     The file looks something like this:
 ````
-{"accountName":"memyselfi","bucketName":"test789"}
+{"accountName":"memyselfi",
+ "bucketName":"test789",
+ "ignores":[".*~", ".*.aws", ".*.git", ".*.s3", ".*.svn", ".*.tmp", "cvs"],
+ "endpointUrl":"http://test789.s3-website-us-east-1.amazonaws.com/"}
 ````
+    NOTE: The current version of awsMirror does not provide a user-friendly means of editing the ignored file patterns
+    (which are regular expressions), nor the endpointUrl.
     From the directory you wish to be the mirror root, run one of the following commands.
 
   a) If the AWS S3 bucket you wish to mirror the directory tree to does not already exist:
