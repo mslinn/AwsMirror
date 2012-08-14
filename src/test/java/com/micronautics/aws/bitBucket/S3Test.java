@@ -31,11 +31,11 @@ import static com.micronautics.aws.S3.relativize;
 import static org.junit.Assert.assertTrue;
 
 public class S3Test {
-    final static String bucketName = "test_" + new Date().getTime();
+    final static String bucketName = "test" + new Date().getTime();
     final static String file1Name = "test.html";
     final static String file2Name = "test2.html";
-    File file1 = new File(file1Name);
-    File file2 = new File(file2Name);
+    final static File file1 = new File(file1Name);
+    final static File file2 = new File(file2Name);
     final static S3 s3 = new S3();
 
     @BeforeClass
@@ -46,6 +46,8 @@ public class S3Test {
     @AfterClass
     public static void runAfterClass() {
         s3.deleteBucket(bucketName);
+        if (file2.exists())
+            file2.delete();
     }
 
     @After
@@ -65,37 +67,15 @@ public class S3Test {
         FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, file1Name), file2);
         assertTrue("Ensure downloaded file can be found", file2.exists());
         assertTrue("Ensure downloaded file is complete", file2.length()==file1.length());
+
+        FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, "/" + file1Name), file2);
+        assertTrue("Ensure downloaded file can be found", file2.exists());
+        assertTrue("Ensure downloaded file is complete", file2.length()==file1.length());
     }
 
     @Test(expected = AmazonS3Exception.class)
     public void boom() throws IOException {
         System.out.println("Downloading /" + file1Name + " (should throw AmazonS3Exception)");
         FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, file1Name), file1);
-    }
-
-    @Test
-    public void keyValue() throws IOException {
-        FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, "./" + file1Name), new File(file1Name));
-        FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, file1Name), new File("indexNoSlash.html"));
-
-        String[] objects = s3.listObjectsByPrefix(bucketName, "");
-        for (Object o : objects)
-            System.out.println(o);
-
-        objects = s3.listObjectsByPrefix(bucketName, null);
-        for (Object o : objects)
-            System.out.println(o);
-
-        objects = s3.listObjectsByPrefix(bucketName, "/index");
-        for (Object o : objects)
-            System.out.println(o);
-
-        objects = s3.listObjectsByPrefix(bucketName, "./index");
-        for (Object o : objects)
-            System.out.println(o);
-
-        objects = s3.listObjectsByPrefix(bucketName, "index");
-        for (Object o : objects)
-            System.out.println(o);
     }
 }
