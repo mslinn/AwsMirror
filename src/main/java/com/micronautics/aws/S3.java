@@ -71,6 +71,16 @@ public class S3 {
         return s3.createBucket(bucketName);
     }
 
+    public void enableWebsite(String bucketName) {
+        BucketWebsiteConfiguration configuration = new BucketWebsiteConfiguration("index.html");
+        s3.setBucketWebsiteConfiguration(bucketName, configuration);
+    }
+
+    public void enableWebsite(String bucketName, String errorPage) {
+        BucketWebsiteConfiguration configuration = new BucketWebsiteConfiguration("index.html", errorPage);
+        s3.setBucketWebsiteConfiguration(bucketName, configuration);
+    }
+
     /** List the buckets in the account */
     public String[] listBuckets() {
         LinkedList<String> result = new LinkedList<String>();

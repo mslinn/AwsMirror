@@ -15,7 +15,6 @@
 package com.micronautics.aws.bitBucket;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.micronautics.aws.S3;
 import org.apache.commons.io.FileUtils;
@@ -41,7 +40,8 @@ public class S3Test {
 
     @BeforeClass
     public static void runBeforeClass() {
-        Bucket bucket = s3.createBucket(bucketName);
+        s3.createBucket(bucketName);
+        s3.enableWebsite(bucketName);
     }
 
     @AfterClass
