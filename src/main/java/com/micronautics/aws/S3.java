@@ -67,8 +67,8 @@ public class S3 {
      * taken by any user, you can't create another bucket with that same repoName.
      *
      * You can optionally specify a location for your bucket if you want to keep your data closer to your applications or users. */
-    public void createBucket(String bucketName) {
-        s3.createBucket(bucketName);
+    public Bucket createBucket(String bucketName) {
+        return s3.createBucket(bucketName);
     }
 
     /** List the buckets in the account */

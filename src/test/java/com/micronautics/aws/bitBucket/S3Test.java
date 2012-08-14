@@ -15,6 +15,7 @@
 package com.micronautics.aws.bitBucket;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.micronautics.aws.S3;
 import org.apache.commons.io.FileUtils;
@@ -40,7 +41,7 @@ public class S3Test {
 
     @BeforeClass
     public static void runBeforeClass() {
-        s3.createBucket(bucketName);
+        Bucket bucket = s3.createBucket(bucketName);
     }
 
     @AfterClass
@@ -70,7 +71,7 @@ public class S3Test {
 
         FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, "/" + file1Name), file2);
         assertTrue("Ensure downloaded file can be found", file2.exists());
-        assertTrue("Ensure downloaded file is complete", file2.length()==file1.length());
+        assertTrue("Ensure downloaded file is complete", file2.length() == file1.length());
     }
 
     @Test(expected = AmazonS3Exception.class)
