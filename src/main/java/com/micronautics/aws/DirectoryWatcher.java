@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import static java.nio.file.StandardWatchEventKinds.*;
@@ -17,16 +19,23 @@ public class DirectoryWatcher {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private WatchService watcher = null;
     private final Path dir;
+    private final String rootDir;
+    private final int rootDirLen;
+    private final Map<WatchKey, Path> keys = new HashMap<WatchKey, Path>();
 
     /** ENTRY_CREATE was always followed by one to 3 ENTRY_MODIFY (in testing) - up to 4.5 seconds afterwards!
      * This called for some crazy login in watch(). */
     public DirectoryWatcher(Path watchedPath) throws IOException{
+        this.dir = watchedPath;
+        this.rootDir = dir.toFile().getAbsolutePath();
+        this.rootDirLen = rootDir.length();
         this.watcher = FileSystems.getDefault().newWatchService();
         for (Path path : subPaths(watchedPath, new ArrayList<Path>())) {
-            logger.debug("Watching " + path.toString());
-            path.register(watcher, /*ENTRY_CREATE, */ENTRY_DELETE, ENTRY_MODIFY);
+            WatchKey watchKey = path.register(watcher, /*ENTRY_CREATE, */ENTRY_DELETE, ENTRY_MODIFY);
+            Path relativePath = watchedPath.relativize(path);
+            keys.put(watchKey, relativePath);
+            //logger.debug("watchKey " + watchKey + " => " + relativePath.toString());
         }
-        this.dir = watchedPath;
     }
 
     protected boolean ignore(File file) {
@@ -39,6 +48,7 @@ public class DirectoryWatcher {
     }
 
     protected ArrayList<Path> subPaths(Path path, ArrayList<Path> result) {
+        logger.debug("  Watching subPath " + path);
         if (path.toFile().isDirectory() && result.size()==0)
             result.add(path);
 
@@ -65,6 +75,9 @@ public class DirectoryWatcher {
                 return;
             }
 
+            Path basePath = keys.get(key);
+            logger.debug("basePath=" + basePath);
+
             for (WatchEvent<?> event : key.pollEvents()) {
                 WatchEvent.Kind<?> kind = event.kind();
 
@@ -89,8 +102,9 @@ public class DirectoryWatcher {
                     lastPath = path;
                     lastTime = thisTime;
 
-                    logger.debug("TODO: take action on '" + path + "'; " + kind + "; dt=" + dt + "ms");
-                    // todo delete from S3
+                    String relativePath = ("/" + basePath.toString() + "/" + path.toString()).replace("\\", "/"); // todo leading slash a good idea?
+                    logger.debug("DirectoryWatcher deleting '" + relativePath + "' from AWS S3; " + kind + "; dt=" + dt + "ms");
+                    Model.s3.deleteObject(Model.bucketName, relativePath);
                     continue;
                 }
 

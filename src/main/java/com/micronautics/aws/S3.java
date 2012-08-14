@@ -12,6 +12,24 @@ import java.io.*;
 import java.util.Date;
 import java.util.LinkedList;
 
+/**
+ * When uploading, a key does not start with a slash, one is added for consistency with how web clients fetch assets
+ * <pre>GET /robots.txt
+ * GET /flex/portfolio/healthCare.jsp
+ * GET /StyleSheet.css
+ * GET /</pre>
+ * Similarly, if a non-empty prefix is specified, a slash is also added. This means that all assets uploaded with this
+ * program have leading slashes.
+ *
+ * When downloading, keys are returned with leading dots to be compatible with file systems.
+ * For example:
+ * <tt></tt>/</tt> translates to <tt>./</tt>
+ * <tt></tt>/healthCare.jsp</tt> translates to <tt>./healthCare.jsp</tt>
+ * <tt></tt>/flex/portfolio/healthCare.jsp</tt> translates to <tt>./flex/portfolio/healthCare.jsp</tt>
+ *
+ * Keys of assets that were uploaded by other clients might not start with leading slashes; those assets can
+ * not be fetched by web browsers.
+ */
 public class S3 {
     private AmazonS3 s3;
     public Exception exception;
@@ -61,11 +79,14 @@ public class S3 {
         return result.toArray(new String[result.size()]);
     }
 
-    /** Uploads a file to the specified bucket. The file's last-modified date is applied to the uploaded file */
+    /** Uploads a file to the specified bucket. The file's last-modified date is applied to the uploaded file.
+     * If the key does not start with a slash, one is added for consistency. */
     public PutObjectResult uploadFile(String bucketName, String key, File file) {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setLastModified(new Date(file.lastModified()));
         metadata.setContentLength(file.length());
+        if (!key.startsWith("/"))
+            key = "/" + key;
         try {
             InputStream inputStream = new FileInputStream(file);
             return s3.putObject(new PutObjectRequest(bucketName, key, inputStream, metadata));
@@ -75,9 +96,11 @@ public class S3 {
         }
     }
 
-    /** @param key not sure what this is for; might it be a directory name?
-     *  @see http://docs.amazonwebservices.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/model/ObjectMetadata.html */
+    /** @param key if the key does not start with a slash, one is added
+     *  @see <a href="http://docs.amazonwebservices.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/model/ObjectMetadata.html">ObjectMetadata</a> */
     public void uploadStream(String bucketName, String key, InputStream stream, int filesize) {
+        if (!key.startsWith("/"))
+            key = "/" + key;
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(filesize);
         //metadata.setContentType("whatever");
@@ -86,7 +109,8 @@ public class S3 {
         s3.putObject(new PutObjectRequest(bucketName, key, stream, metadata));
     }
 
-    /** Download an object - When you download an object, you get all of the object's metadata and a
+    /** Download an object - if the key does not start with a slash, one is added.
+     * When you download an object, you get all of the object's metadata and a
      * stream from which to read the contents. It's important to read the contents of the stream as quickly as
      * possible since the data is streamed directly from Amazon S3 and your network connection will remain open
      * until you read all the data or close the input stream.
@@ -94,13 +118,18 @@ public class S3 {
      * GetObjectRequest also supports several other options, including conditional downloading of objects
      * based on modification times, ETags, and selectively downloading a range of an object. */
     public InputStream downloadFile(String bucketName, String key) {
+        if (!key.startsWith("/"))
+            key = "/" + key;
         S3Object object = s3.getObject(new GetObjectRequest(bucketName, key));
 //        System.out.println("Content-Type: " + object.getObjectMetadata().getContentType());
         return object.getObjectContent();
     }
 
-    /** List objects in given bucketName by prefix. */
+    /** List objects in given bucketName by prefix.
+     * @param prefix A leading slash is enforced if a prefix is specified */
     public String[] listObjectsByPrefix(String bucketName, String prefix) {
+        if (null!=prefix && prefix.length()>0 && !prefix.startsWith("/"))
+            prefix = "/" + prefix;
         LinkedList<String> result = new LinkedList<String>();
         boolean more = true;
         ObjectListing objectListing = s3.listObjects(new ListObjectsRequest()
@@ -116,13 +145,23 @@ public class S3 {
         return result.toArray(new String[result.size()]);
     }
 
+    /** @param prefix A leading slash is enforced if a prefix is specified
+     *  @return collection of S3ObjectSummary; keys are relativized if prefix is adjusted */
     public LinkedList<S3ObjectSummary> getAllObjectData(String bucketName, String prefix) {
+        boolean prefixAdjusted = false;
+        if (null!=prefix && prefix.length()>0 && !prefix.startsWith("/")) {
+            prefix = "/" + prefix;
+            prefixAdjusted = true;
+        }
         LinkedList<S3ObjectSummary> result = new LinkedList<S3ObjectSummary>();
         boolean more = true;
         ObjectListing objectListing = s3.listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix));
         while (more) {
-            for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
+            for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+                if (prefixAdjusted)
+                    objectSummary.setKey(relativize(objectSummary.getKey()));
                 result.add(objectSummary);
+            }
             more = objectListing.isTruncated();
             if (more)
                 objectListing = s3.listNextBatchOfObjects(objectListing);
@@ -130,24 +169,49 @@ public class S3 {
         return result;
     }
 
+    /** @param prefix A leading slash is enforced if a prefix is specified
+     * @return ObjectSummary with leading "./", prepended if necessary*/
     public S3ObjectSummary getOneObjectData(String bucketName, String prefix) {
+        if (null!=prefix && prefix.length()>0 && !prefix.startsWith("/"))
+            prefix = "/" + prefix;
         ObjectListing objectListing = s3.listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix));
-        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
-            if (objectSummary.getKey().compareTo(prefix)==0)
+        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+            String key = objectSummary.getKey();
+            if (key.compareTo(prefix)==0) {
+                objectSummary.setKey(relativize(key));
                 return objectSummary;
+            }
+        }
         return null;
     }
 
-    /** Delete an object - Unless versioning has been turned on for your bucket,
-    * there is no way to undelete an object, so use caution when deleting objects. */
+    /** Prepend "." or "./" to key if required so it can be used as a relative file name */
+    public static String relativize(String key) {
+        String result = key;
+        if (!result.startsWith("/"))
+            result = "/" + result;
+        result = "." + result;
+        return result;
+    }
+
+    /** Delete an object - if they key does not start with a slash, one is added.
+     * Unless versioning has been turned on for the bucket, there is no way to undelete an object. */
     public void deleteObject(String bucketName, String key) {
+        if (!key.startsWith("/"))
+            key = "/" + key;
         s3.deleteObject(bucketName, key);
     }
 
-    /** Delete a bucket - A bucket must be completely empty before it can be deleted, so remember to
-     * delete any objects from your buckets before you try to delete them. */
+    /** Delete a bucket - The bucket will automatically be emptied if necessary so it can be deleted. */
     public void deleteBucket(String bucketName) throws AmazonClientException {
+        emptyBucket(bucketName);
         s3.deleteBucket(bucketName);
+    }
+
+    public void emptyBucket(String bucketName) throws AmazonClientException {
+        LinkedList<S3ObjectSummary> items = getAllObjectData(bucketName, null);
+        for (S3ObjectSummary item : items)
+            s3.deleteObject(bucketName, item.getKey());
     }
 
     /** Displays the contents of the specified input stream as text.

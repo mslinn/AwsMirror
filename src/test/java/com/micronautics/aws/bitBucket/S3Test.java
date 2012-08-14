@@ -12,31 +12,89 @@
  * License for the specific language governing permissions and limitations under
  * the License. */
 
- package com.micronautics.aws.bitBucket;
+package com.micronautics.aws.bitBucket;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.micronautics.aws.S3;
 import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
+
+import static com.micronautics.aws.S3.relativize;
+import static org.junit.Assert.assertTrue;
 
 public class S3Test {
+    final static String bucketName = "test_" + new Date().getTime();
+    final static String file1Name = "test.html";
+    final static String file2Name = "test2.html";
+    File file1 = new File(file1Name);
+    File file2 = new File(file2Name);
+    final static S3 s3 = new S3();
+
+    @BeforeClass
+    public static void runBeforeClass() {
+        s3.createBucket(bucketName);
+    }
+
+    @AfterClass
+    public static void runAfterClass() {
+        s3.deleteBucket(bucketName);
+    }
+
+    @After
+    public void runAfterTest() {
+        s3.emptyBucket(bucketName);
+    }
+
+    @Test
+    public void keyEquivalence() throws IOException {
+        assertTrue("Ensure file to upload can be found", file1.exists());
+
+        s3.uploadFile(bucketName, file1Name, file1);
+        S3ObjectSummary item = s3.getOneObjectData(bucketName, file1Name);
+        assertTrue("Upload succeeded", null!=item);
+        assertTrue("Upload key matches filename", item.getKey().compareTo(relativize(file1Name))==0);
+
+        FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, file1Name), file2);
+        assertTrue("Ensure downloaded file can be found", file2.exists());
+        assertTrue("Ensure downloaded file is complete", file2.length()==file1.length());
+    }
+
+    @Test(expected = AmazonS3Exception.class)
+    public void boom() throws IOException {
+        System.out.println("Downloading /" + file1Name + " (should throw AmazonS3Exception)");
+        FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, file1Name), file1);
+    }
+
     @Test
     public void keyValue() throws IOException {
-        S3 s3 = new S3();
-        FileUtils.copyInputStreamToFile(s3.downloadFile("ej-www", "./index.html"), new File("index.html"));
-        FileUtils.copyInputStreamToFile(s3.downloadFile("ej-www", "index.html"), new File("indexNoSlash.html"));
+        FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, "./" + file1Name), new File(file1Name));
+        FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, file1Name), new File("indexNoSlash.html"));
 
-        String[] objects = s3.listObjectsByPrefix("ej-www", "/index");
+        String[] objects = s3.listObjectsByPrefix(bucketName, "");
         for (Object o : objects)
             System.out.println(o);
 
-        objects = s3.listObjectsByPrefix("ej-www", "./index");
+        objects = s3.listObjectsByPrefix(bucketName, null);
         for (Object o : objects)
             System.out.println(o);
 
-        objects = s3.listObjectsByPrefix("ej-www", "index");
+        objects = s3.listObjectsByPrefix(bucketName, "/index");
+        for (Object o : objects)
+            System.out.println(o);
+
+        objects = s3.listObjectsByPrefix(bucketName, "./index");
+        for (Object o : objects)
+            System.out.println(o);
+
+        objects = s3.listObjectsByPrefix(bucketName, "index");
         for (Object o : objects)
             System.out.println(o);
     }

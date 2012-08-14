@@ -11,6 +11,7 @@
 
   <logger name="ch.qos.logback.classic"     level="WARN" />
   <logger name="akka.actor.ActorSystemImpl" level="ERROR" />
+  <logger name="com.micronautics.aws.DirectoryWatcher" level="DEBUG" />
 
   <root level="WARN">
     <appender-ref ref="STDOUT" />
