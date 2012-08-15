@@ -6,6 +6,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
+import com.amazonaws.util.StringInputStream;
 
 import java.io.*;
 import java.util.Date;
@@ -150,6 +151,20 @@ public class S3 {
         }
     }
 
+    public PutObjectResult uploadString(String bucketName, String key, String contents) {
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setLastModified(new Date());
+        metadata.setContentLength(contents.length());
+        metadata.setContentType("text/html");
+        try {
+            InputStream inputStream = new StringInputStream(contents);
+            return s3.putObject(new PutObjectRequest(bucketName, key, inputStream, metadata));
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return new PutObjectResult();
+        }
+    }
+
     /** @param key if the key does not start with a slash, one is added
      *  @see <a href="http://docs.amazonwebservices.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/model/ObjectMetadata.html">ObjectMetadata</a> */
     public void uploadStream(String bucketName, String key, InputStream stream, int filesize) {
@@ -240,8 +255,7 @@ public class S3 {
         return null;
     }
 
-    public String getResourceUrl(String bucketName,
-                                 String key) {
+    public String getResourceUrl(String bucketName, String key) {
         return s3.getResourceUrl(bucketName, key);
     }
 

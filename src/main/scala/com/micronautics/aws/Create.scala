@@ -66,9 +66,7 @@ class Create(args: Array[String]) {
               } else
                 return
             }
-            s3.createBucket(s3File.bucketName)
-            println("Created bucket %s for AWS account %s".format(s3File.bucketName, s3File.accountName))
-            println("You can access the new bucket at " + s3.getResourceUrl(s3File.bucketName, ""))
+            doit(s3, s3File.accountName, s3File.bucketName)
         }
     }
   }
@@ -93,10 +91,8 @@ class Create(args: Array[String]) {
           case Some(credentials) =>
             val s3 = new S3(credentials.accessKey, credentials.secretKey)
             try {
-              s3.createBucket(bucketName)
+              doit(s3, accountName, bucketName)
               writeS3(S3File(accountName, bucketName, None))
-              println("Created bucket %s for AWS account %s".format(bucketName, accountName))
-              println("You can access the new bucket at " + s3.getResourceUrl(bucketName, ""))
             } catch {
               case ex =>
                 println(ex.getMessage)
@@ -109,5 +105,14 @@ class Create(args: Array[String]) {
           sys.exit(-2)
         }
     }
+  }
+
+  def doit(s3: S3, accountName: String, bucketName: String) {
+    s3.createBucket(bucketName)
+    println("Created bucket %s for AWS account %s".format(bucketName, accountName))
+    println("You can access the new bucket at " + s3.getResourceUrl(bucketName, ""))
+    s3.uploadString(bucketName, "index.html",
+      """<h1>Hello, World!</h1>
+        | <p>If there is no index.html file you will get an error when you attempt to view the web site.</p>""".stripMargin)
   }
 }

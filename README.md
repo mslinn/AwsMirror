@@ -73,7 +73,7 @@ Usage: aws <action>
                           delete - accountName delete authentication for specified AWS account name
                           list   - list authentications
                           modify - accountName modify authentication for specified AWS account name
-    create [bucketName]   create specified bucket, or bucket specified in relevent .s3 file
+    create [bucketName]   create specified bucket, or bucket specified in relevent .s3 file, enables web acces and uploads a short index.html file
     delete [bucketName]   delete specified bucket, or bucket specified in relevent .s3 file
     download              download directory tree from bucket specified in relevent .s3 file
     empty [bucketName]    empty specified bucket, or bucket specified in relevent .s3 file
