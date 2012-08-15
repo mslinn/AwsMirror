@@ -63,6 +63,7 @@ public class S3 {
         s3 = new AmazonS3Client(awsCredentials);
     }
 
+    // todo create policy for intranets
     protected String bucketPolicy(String bucketName) {
         return "{\n" +
                 "\t\"Version\": \"2008-10-17\",\n" +
@@ -139,8 +140,8 @@ public class S3 {
         else if (key.endsWith(".zip"))
             metadata.setContentType("application/zip");
 
-        if (!key.startsWith("/"))
-            key = "/" + key;
+        if (key.startsWith("/"))
+            key = key.substring(1);
         try {
             InputStream inputStream = new FileInputStream(file);
             return s3.putObject(new PutObjectRequest(bucketName, key, inputStream, metadata));
@@ -153,8 +154,8 @@ public class S3 {
     /** @param key if the key does not start with a slash, one is added
      *  @see <a href="http://docs.amazonwebservices.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/model/ObjectMetadata.html">ObjectMetadata</a> */
     public void uploadStream(String bucketName, String key, InputStream stream, int filesize) {
-        if (!key.startsWith("/"))
-            key = "/" + key;
+        while (key.startsWith("/"))
+            key = key.substring(1);
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(filesize);
         //metadata.setContentType("whatever");
@@ -172,8 +173,9 @@ public class S3 {
      * GetObjectRequest also supports several other options, including conditional downloading of objects
      * based on modification times, ETags, and selectively downloading a range of an object. */
     public InputStream downloadFile(String bucketName, String key) {
-        if (!key.startsWith("/"))
-            key = "/" + key;
+        while (key.startsWith("/"))
+            key = key.substring(1);
+        key = key.replace("//", "/");
         S3Object object = s3.getObject(new GetObjectRequest(bucketName, key));
 //        System.out.println("Content-Type: " + object.getObjectMetadata().getContentType());
         return object.getObjectContent();
@@ -182,8 +184,8 @@ public class S3 {
     /** List objects in given bucketName by prefix.
      * @param prefix A leading slash is enforced if a prefix is specified */
     public String[] listObjectsByPrefix(String bucketName, String prefix) {
-        if (null!=prefix && prefix.length()>0 && !prefix.startsWith("/"))
-            prefix = "/" + prefix;
+        while (null!=prefix && prefix.length()>0 && prefix.startsWith("/"))
+            prefix = prefix.substring(1);
         LinkedList<String> result = new LinkedList<String>();
         boolean more = true;
         ObjectListing objectListing = s3.listObjects(new ListObjectsRequest()
@@ -203,8 +205,8 @@ public class S3 {
      *  @return collection of S3ObjectSummary; keys are relativized if prefix is adjusted */
     public LinkedList<S3ObjectSummary> getAllObjectData(String bucketName, String prefix) {
         boolean prefixAdjusted = false;
-        if (null!=prefix && prefix.length()>0 && !prefix.startsWith("/")) {
-            prefix = "/" + prefix;
+        while (null!=prefix && prefix.length()>0 && prefix.startsWith("/")) {
+            prefix = prefix.substring(1);
             prefixAdjusted = true;
         }
         LinkedList<S3ObjectSummary> result = new LinkedList<S3ObjectSummary>();
@@ -226,8 +228,8 @@ public class S3 {
     /** @param prefix A leading slash is enforced if a prefix is specified
      * @return ObjectSummary with leading "./", prepended if necessary*/
     public S3ObjectSummary getOneObjectData(String bucketName, String prefix) {
-        if (null!=prefix && prefix.length()>0 && !prefix.startsWith("/"))
-            prefix = "/" + prefix;
+        while (null!=prefix && prefix.length()>0 && prefix.startsWith("/"))
+            prefix = prefix.substring(1);
         ObjectListing objectListing = s3.listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix));
         for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
             String key = objectSummary.getKey();
@@ -242,17 +244,17 @@ public class S3 {
     /** Prepend "." or "./" to key if required so it can be used as a relative file name */
     public static String relativize(String key) {
         String result = key;
-        if (!result.startsWith("/"))
-            result = "/" + result;
-        result = "." + result;
+        while (result.startsWith("/"))
+            result = result.substring(1);
+        result = result.replace("//", "/");
         return result;
     }
 
     /** Delete an object - if they key does not start with a slash, one is added.
      * Unless versioning has been turned on for the bucket, there is no way to undelete an object. */
     public void deleteObject(String bucketName, String key) {
-        if (!key.startsWith("/"))
-            key = "/" + key;
+        if (key.startsWith("/"))
+            key = key.substring(1);
         s3.deleteObject(bucketName, key);
     }
 

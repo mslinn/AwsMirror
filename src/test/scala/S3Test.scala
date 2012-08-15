@@ -58,17 +58,13 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
     }
 
     "download" in {
+      s3.uploadFile(bucketName, file1Name, file1)
+
       assert(null != s3File, ".s3 file not found")
 
-      val httpclient: HttpClient = new DefaultHttpClient
-      println("s3File.endpointUrl=" + s3File.endpointUrl + "/index.html")
-      val httpGet: HttpGet = new HttpGet(s3File.endpointUrl + "/index.html")
-      val response: HttpResponse = httpclient.execute(httpGet)
-      val entity: HttpEntity = response.getEntity
-      if (entity != null && entity.getContentLength > 0) {
-        val contents: String = EntityUtils.toString(entity)
-        assert(FileUtils.readFileToString(file1) === contents)
-      }
+      val contents = httpGet(s3File.endpointUrl + "/index.html")
+      assert(contents != null, s3File.endpointUrl + " is invalid")
+      assert(FileUtils.readFileToString(file1) === contents, "Wrong contents")
 
       FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, file1Name), file2)
       assert(file2.exists, "Ensure downloaded file can be found")
@@ -78,9 +74,15 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
       assert(file2.exists, "Ensure downloaded file can be found")
       assert(file2.length === file1.length, "Ensure downloaded file is complete")
     }
+  }
 
-    "boom" in {
-      evaluating{ FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, file1Name), file1) } must produce [AmazonS3Exception]
-    }
+  val httpclient: HttpClient = new DefaultHttpClient
+
+  def httpGet(url: String): String = {
+    println("Getting from url=" + url)
+    val httpGet: HttpGet = new HttpGet(url)
+    val response: HttpResponse = httpclient.execute(httpGet)
+    val entity: HttpEntity = response.getEntity
+    if (entity==null) null else EntityUtils.toString(entity)
   }
 }
