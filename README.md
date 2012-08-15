@@ -8,16 +8,18 @@ This project was sponsored by [Micronautics Research Corporation](http://www.mic
  3. AWS S3 serves a static web site from the content.
 
 ## Notes ##
-AWS translates paths in the root directory; files in the root implicitly have keys that start with a leading slash.
-This program stores each file name (referred to by AWS as a key) with a leading slash, and AWS S3 removes the leading
-slash so you get a normal path name.
+When web site access is enabled, AWS content is accessed by paths constructed by concatentating the URL, a slash (/),
+and the keyed data.
+The keys must therefore consist of relative paths (relative directory name followed by a file name),
+and must not start with a leading slash.
+This program stores each file name (referred to by AWS as a key) without a leading slash.
 For example, assuming that the default file name is `index.html`,
 `http://domain.com` and `http://domain.com/` are translated to `http://domain.com/index.html`.
 
-For example, the key for a file in a directory called `/blah/ick/yuck.html` would be translated to `blah/ick/yuck.html`.
+As another example, AwsMirror defines the key for a file in a directory called `{WEBROOT}/blah/ick/yuck.html` to `blah/ick/yuck.html`.
 
 For each directory, AWS creates a file of the same name, with the suffix `_$folder$`.
-If one of those files are deleted, the associated directory becomes unreachable.
+If one of those files are deleted, the associated directory becomes unreachable. Don't mess with them.
 These hidden files are ignored by this program; users never see them because they are for AWS S3 internal use only.
 
 ## To Build ##
@@ -111,7 +113,7 @@ You can add more AWS accounts by running the same command again.
 {"accountName":"memyselfi",
  "bucketName":"test789",
  "ignores":[".*~", ".*.aws", ".*.git", ".*.s3", ".*.svn", ".*.tmp", "cvs"],
- "endpointUrl":"http://test789.s3-website-us-east-1.amazonaws.com/"}
+ "endpointUrl":"http://test789.s3.amazonaws.com/"}
 ````
     NOTE: The current version of awsMirror does not provide a user-friendly means of editing the ignored file patterns
     (which are regular expressions), nor the endpointUrl.

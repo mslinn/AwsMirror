@@ -1,0 +1,3 @@
+{"accountName":"mslinn","bucketName":"ej-www",
+ "ignores":[".*~", ".*.aws", ".*.git", ".*.s3", ".*.svn", ".*.tmp", "cvs"],
+ "endpoint":"s3.amazonaws.com"}

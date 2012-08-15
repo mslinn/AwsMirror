@@ -41,7 +41,7 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
   }
 
   override def beforeAll() {
-    println("Creating bucket " + bucketName)
+//    println("Creating bucket " + bucketName)
     s3.createBucket(bucketName)
   }
 
@@ -55,6 +55,8 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
       val item: S3ObjectSummary = s3.getOneObjectData(bucketName, file1Name)
       assert(null != item, "Upload succeeded")
       assert(item.getKey.compareTo(relativize(file1Name)) == 0, "Upload key matches filename")
+
+      assert("https://" + bucketName + ".s3.amazonaws.com/" === s3.getResourceUrl(bucketName, ""), "Correct access URL")
     }
 
     "download" in {
@@ -62,6 +64,7 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
 
       assert(null != s3File, ".s3 file not found")
 
+//      println(s3File.endpointUrl)
       val contents = httpGet(s3File.endpointUrl + "/index.html")
       assert(contents != null, s3File.endpointUrl + " is invalid")
       assert(FileUtils.readFileToString(file1) === contents, "Wrong contents")
@@ -79,7 +82,7 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
   val httpclient: HttpClient = new DefaultHttpClient
 
   def httpGet(url: String): String = {
-    println("Getting from url=" + url)
+//    println("Getting from url=" + url)
     val httpGet: HttpGet = new HttpGet(url)
     val response: HttpResponse = httpclient.execute(httpGet)
     val entity: HttpEntity = response.getEntity

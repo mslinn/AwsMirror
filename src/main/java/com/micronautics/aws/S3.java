@@ -4,7 +4,6 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
-import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 
@@ -31,7 +30,7 @@ import java.util.LinkedList;
  * not be fetched by web browsers.
  */
 public class S3 {
-    private AmazonS3 s3;
+    private AmazonS3Client s3;
     public Exception exception;
     public AWSCredentials awsCredentials;
 
@@ -239,6 +238,11 @@ public class S3 {
             }
         }
         return null;
+    }
+
+    public String getResourceUrl(String bucketName,
+                                 String key) {
+        return s3.getResourceUrl(bucketName, key);
     }
 
     /** Prepend "." or "./" to key if required so it can be used as a relative file name */

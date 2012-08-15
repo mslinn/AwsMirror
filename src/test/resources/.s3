@@ -1,1 +1,1 @@
-{"accountName":"mslinn","bucketName":"test","ignores":[".*~", ".*.aws", ".*.git", ".*.s3", ".*.svn", ".*.tmp", "cvs"], "endpointUrl":"http://test.s3-website-us-east-1.amazonaws.com/"}
+{"accountName":"mslinn","bucketName":"test","ignores":[".*~", ".*.aws", ".*.git", ".*.s3", ".*.svn", ".*.tmp", "cvs"], "endpointUrl":"http://test.s3.amazonaws.com/"}

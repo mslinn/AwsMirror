@@ -68,6 +68,7 @@ class Create(args: Array[String]) {
             }
             s3.createBucket(s3File.bucketName)
             println("Created bucket %s for AWS account %s".format(s3File.bucketName, s3File.accountName))
+            println("You can access the new bucket at " + s3.getResourceUrl(bucketName, ""))
         }
     }
   }
@@ -94,6 +95,8 @@ class Create(args: Array[String]) {
             try {
               s3.createBucket(bucketName)
               writeS3(S3File(accountName, bucketName, None))
+              println("Created bucket %s for AWS account %s".format(s3File.bucketName, s3File.accountName))
+              println("You can access the new bucket at " + s3.getResourceUrl(bucketName, ""))
             } catch {
               case ex =>
                 println(ex.getMessage)
