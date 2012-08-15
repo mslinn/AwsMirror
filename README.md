@@ -122,6 +122,8 @@ You can add more AWS accounts by running the same command again.
   a) If the AWS S3 bucket you wish to mirror the directory tree to does not already exist:
 ````
 awsMirror create yourAccountName bucketName
+Created bucket bucketName for AWS account yourAccountName
+You can access the new bucket at https://bucketName.s3.amazonaws.com/
 ````
 
   b) If the AWS S3 bucket already exists:

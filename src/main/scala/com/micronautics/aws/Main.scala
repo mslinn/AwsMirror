@@ -21,6 +21,7 @@ import io.Source
 import akka.actor.ActorSystem
 import scalax.io.Codec
 import org.joda.time.format.DateTimeFormat
+import org.codehaus.jackson.map.ObjectMapper
 
 object Main extends App {
   def credentialPath: Path = Path(new File(sys.env("HOME"))) / ".aws"
@@ -229,7 +230,6 @@ object Main extends App {
    * Write `.s3` file
    * @return String indicating when last synced, if ever synced
    */
-  // todo figure out how to pretty print
   def writeS3(newS3File: S3File): String = {
     val synced = newS3File.lastSyncOption match {
       case None =>
@@ -238,7 +238,16 @@ object Main extends App {
       case Some(dateTime) =>
         "last synced " + dtFormat.print(dateTime)
     }
+
     writeS3(generate(newS3File) + "\n")
+
+// Error: No suitable constructor found for type [simple type, class com.micronautics.aws.S3File]:
+// can not instantiate from JSON object (need to add/enable type information?)
+//    val mapper = new ObjectMapper()
+//    val myObject = mapper.readValue(generate(newS3File), classOf[S3File])
+//    val writer = mapper.writerWithDefaultPrettyPrinter()
+//    writeS3(writer.writeValueAsString(myObject))
+
     synced
   }
 }
