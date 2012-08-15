@@ -110,9 +110,14 @@ class Create(args: Array[String]) {
   def doit(s3: S3, accountName: String, bucketName: String) {
     s3.createBucket(bucketName)
     println("Created bucket %s for AWS account %s".format(bucketName, accountName))
-    println("You can access the new bucket at " + s3.getResourceUrl(bucketName, ""))
+
     s3.uploadString(bucketName, "index.html",
       """<h1>Hello, World!</h1>
         | <p>If there is no index.html file you will get an error when you attempt to view the web site.</p>""".stripMargin)
+    println("""You can access the new bucket at:
+        |  %sindex.html (does not work unless "/index.html" is specified)
+        |  http://%s.s3-website-us-east-1.amazonaws.com
+        |  https://s3.amazonaws.com/%s/index.html (does not work unless "/index.html" is specified)""".
+        format(s3.getResourceUrl(bucketName, ""), bucketName, bucketName))
   }
 }
