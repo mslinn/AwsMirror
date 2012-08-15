@@ -56,8 +56,8 @@ case class S3File(accountName: String,
                   bucketName: String,
                   lastSyncOption: Option[DateTime]=None,
                   ignores: Seq[String]=AWS.defaultIgnores,
-                  endPoint: String = "s3-website-us-east-1.amazonaws.com") {
+                  endpoint: String = "s3-website-us-east-1.amazonaws.com") {
   @JsonIgnore val ignoredPatterns: Seq[Pattern] = ignores.map { x => Pattern.compile(x) }
 
-  def endpointUrl: String = "http://" + bucketName + "." + endPoint + "/";
+  @JsonIgnore def endpointUrl: String = "http://" + bucketName + "." + endpoint;
 }

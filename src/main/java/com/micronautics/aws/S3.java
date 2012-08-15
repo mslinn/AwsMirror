@@ -63,12 +63,31 @@ public class S3 {
         s3 = new AmazonS3Client(awsCredentials);
     }
 
-    /** Create a new S3 bucket - Amazon S3 bucket names are globally unique, so once a bucket repoName has been
+    protected String bucketPolicy(String bucketName) {
+        return "{\n" +
+                "\t\"Version\": \"2008-10-17\",\n" +
+                "\t\"Statement\": [\n" +
+                "\t\t{\n" +
+                "\t\t\t\"Sid\": \"AddPerm\",\n" +
+                "\t\t\t\"Effect\": \"Allow\",\n" +
+                "\t\t\t\"Principal\": {\n" +
+                "\t\t\t\t\"AWS\": \"*\"\n" +
+                "\t\t\t},\n" +
+                "\t\t\t\"Action\": \"s3:GetObject\",\n" +
+                "\t\t\t\"Resource\": \"arn:aws:s3:::" + bucketName + "/*\"\n" +
+                "\t\t}\n" +
+                "\t]\n" +
+                "}";
+    }
+
+    /** Create a new S3 bucket, make it publicly viewable and enable it as a web site.
+     * Amazon S3 bucket names are globally unique, so once a bucket repoName has been
      * taken by any user, you can't create another bucket with that same repoName.
      *
      * You can optionally specify a location for your bucket if you want to keep your data closer to your applications or users. */
     public Bucket createBucket(String bucketName) {
         Bucket bucket = s3.createBucket(bucketName);
+        s3.setBucketPolicy(bucketName, bucketPolicy(bucketName));
         enableWebsite(bucketName);
         return bucket;
     }
@@ -101,6 +120,25 @@ public class S3 {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setLastModified(new Date(file.lastModified()));
         metadata.setContentLength(file.length());
+
+        String keyLC = key.toLowerCase();
+        if (keyLC.endsWith(".html") || keyLC.endsWith(".htm")  || keyLC.endsWith(".shtml") || keyLC.endsWith(".jsp") || keyLC.endsWith(".php"))
+            metadata.setContentType("text/html");
+        else if (key.endsWith(".gif"))
+            metadata.setContentType("image/gif");
+        else if (key.endsWith(".jpg"))
+            metadata.setContentType("image/jpeg");
+        else if (key.endsWith(".png"))
+            metadata.setContentType("image/png");
+        else if (key.endsWith(".txt"))
+            metadata.setContentType("text/plain");
+        else if (key.endsWith(".pdf"))
+            metadata.setContentType("application/pdf");
+        else if (key.endsWith(".doc") || key.endsWith(".docx"))
+            metadata.setContentType("application/msword");
+        else if (key.endsWith(".zip"))
+            metadata.setContentType("application/zip");
+
         if (!key.startsWith("/"))
             key = "/" + key;
         try {
