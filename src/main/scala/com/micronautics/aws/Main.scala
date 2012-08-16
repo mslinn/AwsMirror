@@ -17,49 +17,94 @@ package com.micronautics.aws
 import scalax.file.Path
 import java.io.File
 import com.codahale.jerkson.Json._
-import io.Source
+import scala.io.Source
 import akka.actor.ActorSystem
 import scalax.io.Codec
 import org.joda.time.format.DateTimeFormat
-import org.codehaus.jackson.map.ObjectMapper
+import org.slf4j.LoggerFactory
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
 
 object Main extends App {
-  def credentialPath: Path = Path(new File(sys.env("HOME"))) / ".aws"
+
   lazy val system = ActorSystem()
+  lazy val dtFormat = DateTimeFormat.forPattern("HH:mm:ss 'on' mmm, dd YYYY")
+
   var s3Option: Option[S3] = None
-  val dtFormat = DateTimeFormat.forPattern("HH:mm:ss 'on' mmm, dd YYYY")
+
+  def credentialPath: Path = Path(new File(sys.env("HOME"))) / ".aws"
 
   override def main(args: Array[String]) {
     if (args.length==0)
       help
+    process(args.toList)
+  }
 
-    args(0).toLowerCase match {
-      case "auth" =>
-        new Auth(args)
+  private lazy val logger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger]
+  private lazy val logLevels = Vector[Level](Level.ERROR, Level.WARN, Level.INFO, Level.DEBUG)
+  private var levelWasSet = false
 
-      case "create" =>
-        new Create(args)
+  protected[aws] def increaseLogLevel: Unit = {
+    val logLevel = logger.getLevel
+    val index = math.min(logLevels.size-1, logLevels.indexOf(logLevel)+1)
+    logger.setLevel(logLevels(index))
+    levelWasSet = true
+  }
 
-      case "delete" =>
-        new Delete(args)
+  protected[aws] def decreaseLogLevel: Unit = {
+    val logLevel = logger.getLevel
+    val index = math.max(0, logLevels.indexOf(logLevel)-1)
+    logger.setLevel(logLevels(index))
+    levelWasSet = true
+  }
 
-      case "download" =>
-        new Download(args)
+  private[aws] def process(args: List[String]): Boolean = {
+    args match {
+      case "-v" :: rest =>
+        decreaseLogLevel
+        process(rest)
 
-      case "empty" =>
-        new Empty(args)
+      case "-V" :: rest =>
+        increaseLogLevel
+        process(rest)
 
-      case "help" =>
+      case mandatoryArgs =>
+        if (levelWasSet) {
+          println("Log level is %s".format(logger.getLevel))
+        }
+        commands(mandatoryArgs)
+        true
+    }
+  }
+
+  private[aws] def commands(args: List[String]): Unit = {
+    args match {
+      case "auth" :: rest =>
+        new Auth(rest.toArray)
+
+      case "create" :: rest =>
+        new Create(rest.toArray)
+
+      case "delete" :: rest =>
+        new Delete(rest.toArray)
+
+      case "download" :: rest =>
+        new Download(rest.toArray)
+
+      case "empty" :: rest =>
+        new Empty(rest.toArray)
+
+      case "help" :: rest =>
         help
 
-      case "link" =>
-        new Link(args)
+      case "link" :: rest =>
+        new Link(rest.toArray)
 
-      case "sync" =>
-        new Sync(args)
+      case "sync" :: rest =>
+        new Sync(rest.toArray)
 
-      case "upload" =>
-        new Upload(args)
+      case "upload" :: rest =>
+        new Upload(rest.toArray)
 
       case wtf =>
         println("%s is an unrecognized command".format(wtf))

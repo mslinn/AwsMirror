@@ -25,7 +25,7 @@ class Link(args: Array[String]) {
   }
 
   args.length match {
-    case 1 =>
+    case 0 =>
       // Display .s3 file in this directory or parent
       findS3File(".s3", new File(System.getProperty("user.dir"))) match {
         case None =>
@@ -43,22 +43,22 @@ class Link(args: Array[String]) {
           println("%s is linked with account '%s', bucket '%s' (%s)".format(file.getCanonicalPath, s3File.accountName, s3File.bucketName, synched))
       }
 
-    case 2 =>
+    case 1 =>
       println("An account name and a bucket name must both be specified.")
       help
 
-    case 3 =>
+    case 2 =>
       // Modify .s3 file in current directory or parent by setting accountName and bucketName, or create in current directory
       findS3File() match {
         case None => // create .s3 file in current directory
-          val newS3File = S3File(args(1), args(2), None) // set to never synced
+          val newS3File = S3File(args(0), args(1), None) // set to never synced
           val synced = writeS3(newS3File)
           println("%s is now linked with AWS account '%s', bucket '%s' (%s)".
             format(findS3File().get.getCanonicalPath, newS3File.accountName, newS3File.bucketName, synced))
 
         case Some(file) =>
           val oldS3File: S3File = parseS3File(file) //parse[S3File](Path(file).slurpString(Codec.UTF8))
-          val newS3File: S3File = oldS3File.copy(args(1), args(2)) // set to never synched because we cannot know if it ever was synched previously
+          val newS3File: S3File = oldS3File.copy(args(0), args(1)) // set to never synced because we cannot know if it ever was synched previously
           val synced = writeS3(newS3File)
           println("%s is now linked with account '%s', bucket '%s' (%s)".
             format(file.getCanonicalPath, newS3File.accountName, newS3File.bucketName, synced))

@@ -29,7 +29,7 @@ class Sync(args: Array[String]) {
   }
 
   args.length match {
-    case 1 => // sync
+    case 0 =>
       // Sync bucket specified in .s3 file in this directory or parent
       // Continue uploading until Control-C
       // Error if no .s3 file or bucket does not exist

@@ -24,7 +24,7 @@ class Delete(args: Array[String]) {
   }
 
   args.length match {
-    case 1 => // delete
+    case 0 => // delete
       // Delete bucket specified in .s3 file in this directory or parent; error if no .s3 file
       // Error if bucket does not exist
       // Does not delete .s3 file, in case user wants to recreate the bucket
@@ -45,9 +45,9 @@ class Delete(args: Array[String]) {
           }
       }
 
-    case 3 => // delete awsAccountName bucketName
-      val accountName = args(1)
-      val bucketName = args(2)
+    case 2 => // delete awsAccountName bucketName
+      val accountName = args(0)
+      val bucketName = args(1)
       getAuthentication(accountName) match {
         case None =>
           println("AWS credentials not found for AWS account '%s'".format(accountName))

@@ -21,25 +21,25 @@ import Main._
 
 class Auth(args: Array[String]) {
   args.length match {
-    case 1 =>
+    case 0 =>
       println("Warning: No authentication action specified")
       help
 
-    case 2 =>
+    case 1 =>
       try {
-        auth(AuthAction.withName(args(1).toLowerCase))
+        auth(AuthAction.withName(args(0).toLowerCase))
       } catch {
         case nsee: NoSuchElementException =>
-          println("Error: '%s' is not a valid option for the auth command".format(args(1)))
+          println("Error: '%s' is not a valid option for the auth command".format(args(0)))
          help
       }
 
-    case 3 =>
+    case 2 =>
       try {
-        auth(AuthAction.withName(args(1).toLowerCase()), args(2))
+        auth(AuthAction.withName(args(0).toLowerCase()), args(1))
       } catch {
         case nsee: NoSuchElementException =>
-          println("Error: '%s' is not a valid option for the auth command".format(args(1)))
+          println("Error: '%s' is not a valid option for the auth command".format(args(0)))
           help
       }
 

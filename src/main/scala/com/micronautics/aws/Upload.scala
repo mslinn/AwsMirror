@@ -72,7 +72,7 @@ class Upload(args: Array[String]) {
   }
 
   args.length match {
-    case 1 =>
+    case 0 =>
       val (credentials, s3fileObject, s3File) = retrieveParams
       Model.bucketName = s3fileObject.bucketName
       Model.ignoredPatterns = s3fileObject.ignoredPatterns

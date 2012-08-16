@@ -25,10 +25,10 @@ class Create(args: Array[String]) {
   }
 
   args.length match {
-    case 1 => // create
+    case 0 => // create
       createFromS3File()
 
-    case 3 => // create accountName bucketName
+    case 1 => // create accountName bucketName
       createFromCmdLine()
 
     case _ =>
@@ -79,8 +79,8 @@ class Create(args: Array[String]) {
   def createFromCmdLine(dieOnFailure: Boolean=true): Any = {
     findS3File() match {
       case None =>
-        val accountName = args(1)
-        val bucketName = args(2)
+        val accountName = args(0)
+        val bucketName = args(1)
         getAuthentication(accountName) match {
           case None =>
             if (dieOnFailure) {

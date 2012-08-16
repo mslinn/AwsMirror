@@ -24,7 +24,7 @@ class Download(args: Array[String]) {
   }
 
   args.length match {
-    case 1 =>
+    case 0 =>
       // Upload entire tree to bucket specified in .s3 file in this directory or parent;
       // Error if no .aws or .s3 file or if bucket does not exist
       findS3File() match {
