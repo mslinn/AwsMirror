@@ -72,9 +72,7 @@ class Auth(args: Array[String]) {
         credentials += Credentials(accountName, accessKey, secretKey)
 
         println(listBuckets(accessKey, secretKey, accountName))
-
-        val json = generate(credentials)
-        credentialPath.write(json + "\n")
+        writeCredentials(credentials)
 
       case `delete` =>
         if (accountName==null) {
@@ -97,9 +95,8 @@ class Auth(args: Array[String]) {
                 None
               else
                 Some(cred)
-            }
-            val prettyPrintedCredentials = generate(newCredentials).replaceAll("(.*?:(\\[.*?\\],|.*?,))", "$0\n ")
-            credentialPath.write(prettyPrintedCredentials)
+            }.asInstanceOf[AllCredentials]
+            writeCredentials(newCredentials)
         }
 
       case `list` =>
@@ -131,7 +128,7 @@ class Auth(args: Array[String]) {
 
           case Some(contents) =>
             val oldCredentials = parse[Array[Credentials]](contents)
-            val newCredentials = oldCredentials map { credentials =>
+            val newCredentials = (oldCredentials map { (credentials: Credentials) =>
               if (credentials.awsAccountName==accountName) {
                 val awsAccountName = prompt("AWS account name", credentials.awsAccountName)
                 val accessKey = prompt("Access key for AWS account " + awsAccountName, credentials.accessKey)
@@ -140,11 +137,17 @@ class Auth(args: Array[String]) {
               } else {
                 credentials
               }
-            }
-            credentialPath.write(generate(newCredentials))
+            }).toList.asInstanceOf[AllCredentials]
+            writeCredentials(newCredentials)
           }
       }
     }
+  }
+
+  def writeCredentials(credentials: AllCredentials) {
+    val generatedCredentials = generate(credentials)
+    val prettyPrintedCredentials = generatedCredentials.replaceAll("(.*?:(\\[.*?\\],|.*?,))", "$0\n ") + "\n"
+    credentialPath.write(prettyPrintedCredentials)
   }
 
   def listBuckets(accessKey: String, secretKey: String, accountName: String): String = {
