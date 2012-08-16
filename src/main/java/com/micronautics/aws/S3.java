@@ -123,22 +123,28 @@ public class S3 {
         metadata.setContentLength(file.length());
 
         String keyLC = key.toLowerCase();
-        if (keyLC.endsWith(".html") || keyLC.endsWith(".htm")  || keyLC.endsWith(".shtml") || keyLC.endsWith(".jsp") || keyLC.endsWith(".php"))
+        if (key.endsWith(".css"))
+            metadata.setContentType("text/css");
+        else if (key.endsWith(".doc") || key.endsWith(".docx"))
+            metadata.setContentType("application/msword");
+        else if (keyLC.endsWith(".html") || keyLC.endsWith(".htm")  || keyLC.endsWith(".shtml") || keyLC.endsWith(".jsp") || keyLC.endsWith(".php"))
             metadata.setContentType("text/html");
         else if (key.endsWith(".gif"))
             metadata.setContentType("image/gif");
         else if (key.endsWith(".jpg"))
             metadata.setContentType("image/jpeg");
+        else if (key.endsWith(".js"))
+            metadata.setContentType("text/javascript");
+        else if (key.endsWith(".pdf"))
+            metadata.setContentType("application/pdf");
         else if (key.endsWith(".png"))
             metadata.setContentType("image/png");
         else if (key.endsWith(".txt"))
             metadata.setContentType("text/plain");
-        else if (key.endsWith(".pdf"))
-            metadata.setContentType("application/pdf");
-        else if (key.endsWith(".doc") || key.endsWith(".docx"))
-            metadata.setContentType("application/msword");
         else if (key.endsWith(".zip"))
             metadata.setContentType("application/zip");
+        else
+            metadata.setContentType("text/plain");
 
         if (key.startsWith("/"))
             key = key.substring(1);
