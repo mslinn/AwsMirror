@@ -73,7 +73,7 @@ class Auth(args: Array[String]) {
 
         println(listBuckets(accessKey, secretKey, accountName))
 
-        val json = generate(credentials) // todo figure out how to pretty print
+        val json = generate(credentials)
         credentialPath.write(json + "\n")
 
       case `delete` =>
@@ -98,7 +98,8 @@ class Auth(args: Array[String]) {
               else
                 Some(cred)
             }
-            credentialPath.write(generate(newCredentials))
+            val prettyPrintedCredentials = newCredentials.replaceAll("(.*?:(\\[.*?\\],|.*?,))", "$0\n ")
+            credentialPath.write(generate(prettyPrintedCredentials))
         }
 
       case `list` =>

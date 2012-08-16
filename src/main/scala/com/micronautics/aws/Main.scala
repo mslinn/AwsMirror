@@ -268,7 +268,7 @@ object Main extends App {
   def writeS3(contents: String): Unit = {
     val s3File = new File(System.getProperty("user.dir"), ".s3")
     val s3Path = Path(s3File)
-    s3Path.write(contents)
+    s3Path.write(contents.replaceAll("(.*?:(\\[.*?\\],|.*?,))", "$0\n "))
   }
 
   /**
@@ -283,16 +283,7 @@ object Main extends App {
       case Some(dateTime) =>
         "last synced " + dtFormat.print(dateTime)
     }
-
     writeS3(generate(newS3File) + "\n")
-
-// Error: No suitable constructor found for type [simple type, class com.micronautics.aws.S3File]:
-// can not instantiate from JSON object (need to add/enable type information?)
-//    val mapper = new ObjectMapper()
-//    val myObject = mapper.readValue(generate(newS3File), classOf[S3File])
-//    val writer = mapper.writerWithDefaultPrettyPrinter()
-//    writeS3(writer.writeValueAsString(myObject))
-
     synced
   }
 }

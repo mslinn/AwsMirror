@@ -146,8 +146,7 @@ public class S3 {
         else
             metadata.setContentType("text/plain");
 
-        System.out.println(keyLC + " => " + metadata.getContentType());
-        if (key.startsWith("/"))
+        while (key.startsWith("/"))
             key = key.substring(1);
         try {
             InputStream inputStream = new FileInputStream(file);

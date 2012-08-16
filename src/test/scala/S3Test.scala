@@ -59,6 +59,17 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
       assert("https://" + bucketName + ".s3.amazonaws.com/" === s3.getResourceUrl(bucketName, ""), "Correct access URL")
     }
 
+    "pretty-print JSON" in {
+      val contents = """{"accountName":"memyselfi","bucketName":"blah","ignores":[".*~",".*.aws",".*.git",".*.s3",".*.svn",".*.tmp","cvs"],"endpoint":"s3-website-us-east-1.amazonaws.com"}"""
+      val result = contents.replaceAll("(.*?:(\\[.*?\\],|.*?,))", "$0\n ")
+      println(result)
+      assert(
+        """{"accountName":"memyselfi",
+          | "bucketName":"blah",
+          | "ignores":[".*~",".*.aws",".*.git",".*.s3",".*.svn",".*.tmp","cvs"],
+          | "endpoint":"s3-website-us-east-1.amazonaws.com"}""".stripMargin === result, "PrettyPrinted JSON")
+    }
+
     "download" in {
       s3.uploadFile(bucketName, file1Name, file1)
 
