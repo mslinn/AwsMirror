@@ -122,26 +122,26 @@ public class S3 {
         metadata.setLastModified(new Date(file.lastModified()));
         metadata.setContentLength(file.length());
 
-        String keyLC = key.toLowerCase();
-        if (key.endsWith(".css"))
+        String keyLC = key.toLowerCase().trim();
+        if (keyLC.endsWith(".css"))
             metadata.setContentType("text/css");
-        else if (key.endsWith(".doc") || key.endsWith(".docx"))
+        else if (keyLC.endsWith(".doc") || keyLC.endsWith(".docx"))
             metadata.setContentType("application/msword");
         else if (keyLC.endsWith(".html") || keyLC.endsWith(".htm")  || keyLC.endsWith(".shtml") || keyLC.endsWith(".jsp") || keyLC.endsWith(".php"))
             metadata.setContentType("text/html");
-        else if (key.endsWith(".gif"))
+        else if (keyLC.endsWith(".gif"))
             metadata.setContentType("image/gif");
-        else if (key.endsWith(".jpg"))
+        else if (keyLC.endsWith(".jpg"))
             metadata.setContentType("image/jpeg");
-        else if (key.endsWith(".js"))
+        else if (keyLC.endsWith(".js"))
             metadata.setContentType("text/javascript");
-        else if (key.endsWith(".pdf"))
+        else if (keyLC.endsWith(".pdf"))
             metadata.setContentType("application/pdf");
-        else if (key.endsWith(".png"))
+        else if (keyLC.endsWith(".png"))
             metadata.setContentType("image/png");
-        else if (key.endsWith(".txt"))
+        else if (keyLC.endsWith(".txt"))
             metadata.setContentType("text/plain");
-        else if (key.endsWith(".zip"))
+        else if (keyLC.endsWith(".zip"))
             metadata.setContentType("application/zip");
         else
             metadata.setContentType("text/plain");
