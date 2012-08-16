@@ -99,7 +99,9 @@ class Downloader(overwrite: Boolean) {
   }
 
   def downloadOne(node: S3ObjectSummary, outFile: File) = {
-    logger.info("Downloading '" + node.getKey + "' to '" + outFile.getAbsolutePath + "', last modified " + dtFmt(node.getLastModified) + ", " + node.getSize + " bytes.")
+    logger.info("Downloading '%s' (%s, %d bytes) to '%s' ( %s, %d bytes).".
+      format(node.getKey, dtFmt(node.getLastModified), node.getSize,
+             outFile.getAbsolutePath, dtFmt(node.getLastModified), outFile.length))
     FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
     outFile.setLastModified(node.getLastModified().getTime)
   }

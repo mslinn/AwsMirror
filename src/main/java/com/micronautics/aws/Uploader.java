@@ -83,27 +83,27 @@ public class Uploader extends DirectoryWalker<File> {
             if (!overwrite)
               switch (comparedAges) {
                   case s3FileDoesNotExist:
-                      logger.info("Uploading " + path + " to " + bucketName + " because it does not exist remotely");
+                      logger.info("Uploading " + path + " to " + bucketName + " because it does not exist remotely.");
                       break;
 
                   case s3FileIsOlderThanLocal:
-                      logger.info("Uploading " + path + "(" + dtFmt(file.lastModified()) + ") to " + bucketName + " because the remote copy is older");
+                      logger.info("Uploading '" + path + "' (" + dtFmt(file.lastModified()) + ") to '" + bucketName + "' because the remote copy is older.");
                       break;
 
                   case s3FileSameAgeAsLocal:
                       if (!overwrite) {
-                          logger.debug("Uploader skipping " + path + " because it is the same age as the local copy and overwrite is disabled");
+                          logger.debug("Uploader skipping " + path + " because it is the same age as the local copy and overwrite is disabled.");
                           return;
                       }
-                      logger.debug("Uploading " + path + " even though it is the same age as the local copy because overwrite is enabled");
+                      logger.debug("Uploading " + path + " even though it is the same age as the local copy because overwrite is enabled.");
                       break;
 
                   case s3FileNewerThanLocal:
-                      logger.debug("Uploader skipping " + path + " because the local copy is older");
+                      logger.debug("Uploader skipping " + path + " because the local copy is older.");
                       return;
 
                   case s3FileDoesNotExistLocally:
-                      logger.debug("Uploader cannot upload " + path + " because the local copy does not exist");
+                      logger.debug("Uploader cannot upload " + path + " because the local copy does not exist.");
                       return;
             }
             //final Future<PutObjectResult> future = Futures.future(new UploadOne(path, file), dispatcher);

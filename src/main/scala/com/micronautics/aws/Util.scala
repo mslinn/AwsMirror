@@ -23,19 +23,20 @@ object Util {
    *           1 if remote copy is newer,
    *           2 if local copy does not exist */
   def compareS3FileAge(file: File, node: S3ObjectSummary): Int = {
-      if (!file.exists)
-        return s3FileDoesNotExistLocally
+    if (!file.exists)
+      return s3FileDoesNotExistLocally
 
-      if (null==node)
-        return s3FileDoesNotExist
+    if (null==node)
+      return s3FileDoesNotExist
 
-      val s3NodeLastModified: Date = node.getLastModified
-      val result: Int = if (s3NodeLastModified.getTime == file.lastModified)
-          s3FileSameAgeAsLocal
-        else if (s3NodeLastModified.getTime < file.lastModified)
-          s3FileIsOlderThanLocal
-        else
-          s3FileNewerThanLocal
+    val s3NodeLastModified: Date = node.getLastModified
+    //println("s3NodeLastModified.getTime=" + s3NodeLastModified.getTime + "; file.lastModified=" + file.lastModified)
+    val result: Int = if (s3NodeLastModified.getTime == file.lastModified)
+        s3FileSameAgeAsLocal
+      else if (s3NodeLastModified.getTime < file.lastModified)
+        s3FileIsOlderThanLocal
+      else
+        s3FileNewerThanLocal
       result
     }
 

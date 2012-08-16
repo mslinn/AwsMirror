@@ -116,12 +116,68 @@ public class S3 {
     }
 
     /** Uploads a file to the specified bucket. The file's last-modified date is applied to the uploaded file.
-     * If the key does not start with a slash, one is added for consistency. */
+     * If the key has leading slashes, they are removed for consistency. */
     public PutObjectResult uploadFile(String bucketName, String key, File file) {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setLastModified(new Date(file.lastModified()));
-        metadata.setContentLength(file.length());
+        metadata.setContentEncoding("utf-8");
+        // content length is set by s3.putObject()
+        setContentType(key, metadata);
 
+        while (key.startsWith("/"))
+            key = key.substring(1);
+        try {
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, file);
+            putObjectRequest.setMetadata(metadata);
+            putObjectRequest.setProgressListener(new ProgressListener() {
+                int bytesTransferred = 0;
+                @Override
+                public void progressChanged(ProgressEvent progressEvent) {
+                    bytesTransferred += progressEvent.getBytesTransfered();
+                    if (progressEvent.getEventCode()==ProgressEvent.COMPLETED_EVENT_CODE)
+                        System.out.print(" " + bytesTransferred + " bytes; ");
+                    else
+                        System.out.print(".");
+                }
+            });
+            PutObjectResult result = s3.putObject(putObjectRequest);
+            return result;
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return new PutObjectResult();
+        }
+    }
+
+    public PutObjectResult uploadString(String bucketName, String key, String contents) {
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setLastModified(new Date());
+        metadata.setContentEncoding("utf-8");
+        metadata.setContentLength(contents.length());
+        setContentType(key, metadata);
+        try {
+            InputStream inputStream = new StringInputStream(contents);
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, inputStream, metadata);
+            return s3.putObject(putObjectRequest);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return new PutObjectResult();
+        }
+    }
+
+    /** @param key if the key has any leading slashes, they are removed
+     *  @see <a href="http://docs.amazonwebservices.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/model/ObjectMetadata.html">ObjectMetadata</a> */
+    public void uploadStream(String bucketName, String key, InputStream stream, int length) {
+        while (key.startsWith("/"))
+            key = key.substring(1);
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(length);
+        metadata.setContentEncoding("utf-8");
+        setContentType(key, metadata);
+        //metadata.setCacheControl("cacheControl");
+        s3.putObject(new PutObjectRequest(bucketName, key, stream, metadata));
+    }
+
+    private void setContentType(String key, ObjectMetadata metadata) {
         String keyLC = key.toLowerCase().trim();
         if (keyLC.endsWith(".css"))
             metadata.setContentType("text/css");
@@ -145,46 +201,9 @@ public class S3 {
             metadata.setContentType("application/zip");
         else
             metadata.setContentType("text/plain");
-
-        while (key.startsWith("/"))
-            key = key.substring(1);
-        try {
-            InputStream inputStream = new FileInputStream(file);
-            return s3.putObject(new PutObjectRequest(bucketName, key, inputStream, metadata));
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            return new PutObjectResult();
-        }
     }
 
-    public PutObjectResult uploadString(String bucketName, String key, String contents) {
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setLastModified(new Date());
-        metadata.setContentLength(contents.length());
-        metadata.setContentType("text/html");
-        try {
-            InputStream inputStream = new StringInputStream(contents);
-            return s3.putObject(new PutObjectRequest(bucketName, key, inputStream, metadata));
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            return new PutObjectResult();
-        }
-    }
-
-    /** @param key if the key does not start with a slash, one is added
-     *  @see <a href="http://docs.amazonwebservices.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/model/ObjectMetadata.html">ObjectMetadata</a> */
-    public void uploadStream(String bucketName, String key, InputStream stream, int filesize) {
-        while (key.startsWith("/"))
-            key = key.substring(1);
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(filesize);
-        //metadata.setContentType("whatever");
-        metadata.setContentEncoding("utf-8");
-        //metadata.setCacheControl("cacheControl");
-        s3.putObject(new PutObjectRequest(bucketName, key, stream, metadata));
-    }
-
-    /** Download an object - if the key does not start with a slash, one is added.
+    /** Download an object - if the key has any leading slashes, they are removed.
      * When you download an object, you get all of the object's metadata and a
      * stream from which to read the contents. It's important to read the contents of the stream as quickly as
      * possible since the data is streamed directly from Amazon S3 and your network connection will remain open
@@ -202,7 +221,7 @@ public class S3 {
     }
 
     /** List objects in given bucketName by prefix.
-     * @param prefix A leading slash is enforced if a prefix is specified */
+     * @param prefix Any leading slashes are removed if a prefix is specified */
     public String[] listObjectsByPrefix(String bucketName, String prefix) {
         while (null!=prefix && prefix.length()>0 && prefix.startsWith("/"))
             prefix = prefix.substring(1);
@@ -221,7 +240,7 @@ public class S3 {
         return result.toArray(new String[result.size()]);
     }
 
-    /** @param prefix A leading slash is enforced if a prefix is specified
+    /** @param prefix Any leading slashes are removed if a prefix is specified
      *  @return collection of S3ObjectSummary; keys are relativized if prefix is adjusted */
     public LinkedList<S3ObjectSummary> getAllObjectData(String bucketName, String prefix) {
         boolean prefixAdjusted = false;
@@ -245,7 +264,7 @@ public class S3 {
         return result;
     }
 
-    /** @param prefix A leading slash is enforced if a prefix is specified
+    /** @param prefix Any leading slashes are removed if a prefix is specified
      * @return ObjectSummary with leading "./", prepended if necessary*/
     public S3ObjectSummary getOneObjectData(String bucketName, String prefix) {
         while (null!=prefix && prefix.length()>0 && prefix.startsWith("/"))
@@ -265,7 +284,7 @@ public class S3 {
         return s3.getResourceUrl(bucketName, key);
     }
 
-    /** Prepend "." or "./" to key if required so it can be used as a relative file name */
+    /** @param key any leading slashes are removed so the key can be used as a relative path */
     public static String relativize(String key) {
         String result = key;
         while (result.startsWith("/"))
@@ -274,7 +293,7 @@ public class S3 {
         return result;
     }
 
-    /** Delete an object - if they key does not start with a slash, one is added.
+    /** Delete an object - if they key has any leading slashes, they are removed.
      * Unless versioning has been turned on for the bucket, there is no way to undelete an object. */
     public void deleteObject(String bucketName, String key) {
         if (key.startsWith("/"))
