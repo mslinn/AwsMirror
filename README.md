@@ -55,7 +55,10 @@ The help message shows all the subcommands:
 
 ````
 Usage: aws <action>
-  Where <action> is one of:
+  Where <option> is one of:
+    -v    less verbose output
+    -V    more verbose output
+  and <action> is one of:
     auth                  provide authentication for an additional AWS account
                           delete - accountName delete authentication for specified AWS account name
                           list   - list authentications
