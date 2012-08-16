@@ -26,8 +26,8 @@ public class Uploader extends DirectoryWalker<File> {
     private Logger logger = LoggerFactory.getLogger(getClass());
     boolean overwrite;
     int treeRootStrLen;
-    MessageDispatcher dispatcher = Main.system().dispatcher();
-    private final ArrayList<Future<PutObjectResult>> futures = new ArrayList<Future<PutObjectResult>>();
+    //MessageDispatcher dispatcher = Main.system().dispatcher();
+    //private final ArrayList<Future<PutObjectResult>> futures = new ArrayList<Future<PutObjectResult>>();
 
     public Uploader(boolean overwrite) {
         super();
@@ -43,12 +43,13 @@ public class Uploader extends DirectoryWalker<File> {
         treeRootStrLen = treeRoot.getCanonicalPath().length();
         ArrayList<File> results = new ArrayList<File>();
         walk(treeRoot, results);
-        final Future<Iterable<PutObjectResult>> future = Futures.sequence(futures, dispatcher);
+        /*final Future<Iterable<PutObjectResult>> future = Futures.sequence(futures, dispatcher);
         try { // block until the Futures all complete
             Await.result(future, Duration.Inf());
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
-        }
+        }*/
+
         return results;
     }
 
@@ -105,8 +106,9 @@ public class Uploader extends DirectoryWalker<File> {
                       logger.debug("Uploader cannot upload " + path + " because the local copy does not exist");
                       return;
             }
-            final Future<PutObjectResult> future = Futures.future(new UploadOne(path, file), dispatcher);
-            futures.add(future);
+            //final Future<PutObjectResult> future = Futures.future(new UploadOne(path, file), dispatcher);
+            //futures.add(future);
+            new UploadOne(path, file).call(); // disable multithreading
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }

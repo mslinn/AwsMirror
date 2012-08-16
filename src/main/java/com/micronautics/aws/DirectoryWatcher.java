@@ -102,7 +102,7 @@ public class DirectoryWatcher {
                     lastPath = path;
                     lastTime = thisTime;
 
-                    String relativePath = ("/" + basePath.toString() + "/" + path.toString()).replace("\\", "/"); // todo leading slash a good idea?
+                    String relativePath = ("/" + basePath.toString() + "/" + path.toString()).replace("\\", "/");
                     logger.debug("DirectoryWatcher deleting '" + relativePath + "' from AWS S3; " + kind + "; dt=" + dt + "ms");
                     Model.s3.deleteObject(Model.bucketName, relativePath);
                     continue;
@@ -116,8 +116,9 @@ public class DirectoryWatcher {
 
                 if (differentFile || (!differentFile && dt>150)) {
                     logger.debug("DirectoryWatcher starting upload of '" + path + "'; " + kind + "; dt=" + dt + "ms");
-                    String s3Key = path.toString(); // might need to make this relative to watchedPath
-                    Futures.future(new UploadOne(s3Key, path.toFile()), Main.system().dispatcher());
+                    String s3Key = path.toString();
+                    //Futures.future(new UploadOne(s3Key, path.toFile()), Main.system().dispatcher());
+                    new UploadOne(s3Key, path.toFile()).call(); // disable multithreading
                 } else {
                     //System.out.println("Skipping duplicate " + path + "; " + kind + "; dt=" + dt);
                 }

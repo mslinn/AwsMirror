@@ -28,7 +28,7 @@ import scala.collection.mutable
 /** Downloads on multiple threads */
 class Downloader(overwrite: Boolean) {
   private[aws] val s3 = new S3(credentials.accessKey, credentials.secretKey)
-  private val futures = mutable.ListBuffer.empty[Future[Boolean]]
+  //private val futures = mutable.ListBuffer.empty[Future[Boolean]]
   private implicit val dispatcher: ExecutionContext = Main.system.dispatcher
   private val logger = LoggerFactory.getLogger(getClass)
 
@@ -40,7 +40,7 @@ class Downloader(overwrite: Boolean) {
     }
     Model.allNodes foreach { node: S3ObjectSummary =>
       val outFileName: String = if (node.getKey.startsWith("/") || node.getKey.startsWith("\\"))
-                node.getKey.substring(1) else node.getKey
+        node.getKey.substring(1) else node.getKey
       val outFile: File = new File(outFileName)
       results.add(outFile)
       try {
@@ -66,18 +66,21 @@ class Downloader(overwrite: Boolean) {
               case r: Int if r==s3FileSameAgeAsLocal =>
                 if (overwriteExisting) {
                   logger.debug("Downloading because the remote copy of %s is the same age as the local copy and overwrite is enabled.".format(file.getAbsolutePath))
-                  futures += Future(downloadOne(node, file))
+                  //futures += Future(downloadOne(node, file))
+                  downloadOne(node, file) // disable multithreading
                 } else
                   logger.debug("Remote copy of %s is the same age as the local copy and overwrite is disabled, so it was not downloaded.".format(file.getAbsolutePath))
 
               case r: Int if r==s3FileNewerThanLocal =>
                 logger.debug("Downloading '%s' to '%s' because the remote copy is newer (%s) than the local copy (%s).".
                   format(node.getKey, file.getAbsolutePath, dtFmt(node.getLastModified), dtFmt(file.lastModified)))
-                futures += Future(downloadOne(node, file))
+                //futures += Future(downloadOne(node, file))
+                downloadOne(node, file) // disable multithreading
 
               case r: Int if r==s3FileDoesNotExistLocally =>
                 logger.debug("Downloading '%s' because '%s' does not exist locally.".format(node.getKey, file.getAbsolutePath))
-                futures += Future(downloadOne(node, file))
+                //futures += Future(downloadOne(node, file))
+                downloadOne(node, file) // disable multithreading
             }
           }
         }
