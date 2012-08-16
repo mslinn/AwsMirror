@@ -66,7 +66,7 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
       assert(
         """{"accountName":"memyselfi",
           | "bucketName":"blah",
-          | "ignores":[".*~",".*.aws",".*.git",".*.s3",".*.svn",".*.tmp","cvs"],
+          | "ignores":[".*~",".*.aws",".*.git",".*.s3",".*.svn",".*.swp",".*.tmp","cvs"],
           | "endpoint":"s3-website-us-east-1.amazonaws.com"}""".stripMargin === result, "PrettyPrinted JSON")
     }
 

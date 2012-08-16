@@ -102,7 +102,7 @@ You can add more AWS accounts by running the same command again.
 ````
 {"accountName":"memyselfi",
  "bucketName":"test789",
- "ignores":[".*~", ".*.aws", ".*.git", ".*.s3", ".*.svn", ".*.tmp", "cvs"],
+ "ignores":[".*~", ".*.aws", ".*.git", ".*.s3", ".*.svn", ".*.swp", ".*.tmp", "cvs"],
  "endpointUrl":"http://test789.s3.amazonaws.com/"}
 ````
     NOTE: The current version of awsMirror does not provide a user-friendly means of editing the ignored file patterns
