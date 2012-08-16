@@ -7,31 +7,18 @@ This project was sponsored by [Micronautics Research Corporation](http://www.mic
  2. Storing content on AWS S3 (CDN).
  3. AWS S3 serves a static web site from the content.
 
-## Notes ##
-When web site access is enabled, AWS content is accessed by paths constructed by concatentating the URL, a slash (/),
-and the keyed data.
-The keys must therefore consist of relative paths (relative directory name followed by a file name),
-and must not start with a leading slash.
-This program stores each file name (referred to by AWS as a key) without a leading slash.
-For example, assuming that the default file name is `index.html`,
-`http://domain.com` and `http://domain.com/` are translated to `http://domain.com/index.html`.
-
-As another example, AwsMirror defines the key for a file in a directory called `{WEBROOT}/blah/ick/yuck.html` to `blah/ick/yuck.html`.
-
-For each directory, AWS creates a file of the same name, with the suffix `_$folder$`.
-If one of those files are deleted, the associated directory becomes unreachable. Don't mess with them.
-These hidden files are ignored by this program; users never see them because they are for AWS S3 internal use only.
-
 ## To Build ##
 
 ### Start Script ###
 
 The compiled program needs to be run from a script. `xsbt-start-script-plugin` creates that script.
-See [my suggestion](https://github.com/typesafehub/xsbt-start-script-plugin/issues/17) on how to improve the generated script.
+See [my pull request](https://github.com/typesafehub/xsbt-start-script-plugin/issues/17) that improves the generated script.
 If you install my modified version of `xsbt-start-script-plugin` then you should be able to run the script from any directory.
 To do that:
 
 ````
+mkdir ~/work
+cd ~/work
 git clone git://github.com/mslinn/xsbt-start-script-plugin.git
 cd xsbt-start-script-plugin
 sbt compile publish-local
@@ -40,16 +27,16 @@ sbt compile publish-local
 ### Building AwsMirror ###
 
  1. This program requires Java 7 or later.
- 1. Either point `JAVA_HOME` to a Java 7 JDK, or point `JAVA7_HOME` to that directory.
+ 1. Point `JAVA_HOME` to a Java 7 JDK.
  1. Type the following into a bash console:
 ````
-git clone git@github.com:mslinn/awsMirror.git
-cd awsMirror
+git clone git@github.com:mslinn/AwsMirror.git
+cd AwsMirror
 sbt compile start-script
 ````
 
- 1. Add  `awsMirror/target` to the `PATH` or write a script like this bash script to launch the program.
-    The remainder of these instructions assume that a similar script exists somewhere on the path called `awsMirror`:
+ 1. Add  `AwsMirror/target` to the `PATH` or write a script like this bash script to launch the program.
+    The remainder of these instructions assume that a similar script exists somewhere on the path called `aws`:
 ````
 #!/bin/bash
 # Ensure that Java 7 is on the classpath; best if JAVA_HOME is also set
@@ -61,7 +48,7 @@ export SBT_HOME=/opt
 ## To Run ##
 
 ````
-awsMirror subcommandsGoHere
+aws subcommandsGoHere
 ````
 
 The help message shows all the subcommands:
@@ -94,7 +81,7 @@ The `upload` and `sync` commands continue uploading changed files until you pres
 hold your AWS access key and your AWS secret key for the AWS account you specify.
 You can store multiple authentications for each of the AWS accounts that you work with.
 ````
-awsMirror auth yourAccountName
+aws auth yourAccountName
 ````
 The contents of the `.aws` file are in JSON format, and look something like this:
 ````
@@ -117,21 +104,37 @@ You can add more AWS accounts by running the same command again.
 ````
     NOTE: The current version of awsMirror does not provide a user-friendly means of editing the ignored file patterns
     (which are regular expressions), nor the endpointUrl.
+
     From the directory you wish to be the mirror root, run one of the following commands.
 
   a) If the AWS S3 bucket you wish to mirror the directory tree to does not already exist:
 ````
-awsMirror create yourAccountName bucketName
+aws create yourAccountName bucketName
 Created bucket bucketName for AWS account yourAccountName
 You can access the new bucket at https://bucketName.s3.amazonaws.com/
 ````
 
   b) If the AWS S3 bucket already exists:
 ````
-awsMirror link yourAccountName bucketName
+aws link yourAccountName bucketName
 ````
 
  3. Sync the directory with the AWS S3 bucket:
 ````
-awsMirror sync
+aws sync
 ````
+
+## Notes ##
+When web site access is enabled, AWS content is accessed by paths constructed by concatentating the URL, a slash (/),
+and the keyed data.
+The keys must therefore consist of relative paths (relative directory name followed by a file name),
+and must not start with a leading slash.
+This program stores each file name (referred to by AWS as a key) without a leading slash.
+For example, assuming that the default file name is `index.html`,
+`http://domain.com` and `http://domain.com/` are translated to `http://domain.com/index.html`.
+
+As another example, AwsMirror defines the key for a file in a directory called `{WEBROOT}/blah/ick/yuck.html` to `blah/ick/yuck.html`.
+
+For each directory, AWS creates a file of the same name, with the suffix `_$folder$`.
+If one of those files are deleted, the associated directory becomes unreachable. Don't mess with them.
+These hidden files are ignored by this program; users never see them because they are for AWS S3 internal use only.
