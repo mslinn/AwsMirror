@@ -98,8 +98,8 @@ class Auth(args: Array[String]) {
               else
                 Some(cred)
             }
-            val prettyPrintedCredentials = newCredentials.replaceAll("(.*?:(\\[.*?\\],|.*?,))", "$0\n ")
-            credentialPath.write(generate(prettyPrintedCredentials))
+            val prettyPrintedCredentials = generate(newCredentials).replaceAll("(.*?:(\\[.*?\\],|.*?,))", "$0\n ")
+            credentialPath.write(prettyPrintedCredentials)
         }
 
       case `list` =>
