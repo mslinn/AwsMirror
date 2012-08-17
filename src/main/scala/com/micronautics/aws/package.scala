@@ -18,7 +18,6 @@ import collection.mutable.MutableList
 import scala.Array
 import org.joda.time.DateTime
 import java.util.regex.Pattern
-import java.util.{Arrays, ArrayList}
 import org.codehaus.jackson.annotate.JsonIgnore
 import collection.JavaConversions._
 

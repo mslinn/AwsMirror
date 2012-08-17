@@ -30,6 +30,7 @@ libraryDependencies ++= Seq(
   "com.thoughtworks.paranamer"    %  "paranamer"           % "2.5"    withSources(),
   "commons-io"                    %  "commons-io"          % "2.4"    withSources(),
   "commons-httpclient"            %  "commons-httpclient"  % "3.1"    % "test" withSources(),
+  "commons-lang"                  %  "commons-lang"        % "2.6"    withSources(),
   "com.codahale"                  %  "jerkson_2.9.1"       % "0.5.0",
   "com.github.scala-incubator.io" %  "scala-io-core_2.9.1" % "0.4.0"  withSources(),
   "com.github.scala-incubator.io" %  "scala-io-file_2.9.1" % "0.4.0"  withSources(),

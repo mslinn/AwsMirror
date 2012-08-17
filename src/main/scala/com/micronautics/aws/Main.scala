@@ -24,9 +24,10 @@ import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import com.sun.deploy.util.SystemUtils
+import java.nio.file.Files
 
 object Main extends App {
-
   lazy val system = ActorSystem()
   lazy val dtFormat = DateTimeFormat.forPattern("HH:mm:ss 'on' mmm, dd YYYY")
 
@@ -43,6 +44,7 @@ object Main extends App {
   private lazy val logger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger]
   private lazy val logLevels = Vector[Level](Level.ERROR, Level.WARN, Level.INFO, Level.DEBUG)
   private var levelWasSet = false
+  private var multithreadingWasSet = false
 
   protected[aws] def increaseLogLevel: Unit = {
     val logLevel = logger.getLevel
@@ -68,10 +70,21 @@ object Main extends App {
         increaseLogLevel
         process(rest)
 
+      case "-M" :: rest =>
+        Model.multithreadingEnabled = true
+        multithreadingWasSet = true
+        process(rest)
+
+      case "-m" :: rest =>
+        Model.multithreadingEnabled = false
+        multithreadingWasSet = true
+        process(rest)
+
       case mandatoryArgs =>
-        if (levelWasSet) {
-          println("Log level is %s".format(logger.getLevel))
-        }
+        if (levelWasSet)
+          println("Log level is %s.".format(logger.getLevel))
+        if (multithreadingWasSet)
+          println("Multithreading is %s.".format(if (Model.multithreadingEnabled) "enabled" else "disabled"))
         commands(mandatoryArgs)
         true
     }
@@ -125,10 +138,12 @@ object Main extends App {
     println(
       """Usage: aws <option> <action>
         |  Where <option> is one of:
+        |      -m    multithreading enabled
+        |      -M    multithreading disabled
         |      -v    less verbose output
         |      -V    more verbose output
         |  and <action> is one of:
-        |        |    auth   provide authentication for an additional AWS account
+        |    auth   provide authentication for an additional AWS account
         |      add accountName - you will be prompted to add credentials for AWS accountName
         |      delete - accountName delete authentication for specified AWS account name
         |      list   - list authentications
@@ -272,6 +287,19 @@ object Main extends App {
     val s3File = new File(System.getProperty("user.dir"), ".s3")
     val s3Path = Path(s3File)
     s3Path.write(contents.replaceAll("(.*?:(\\[.*?\\],|.*?,))", "$0\n "))
+    makeFileHiddenIfDos(s3Path)
+  }
+
+  def makeFileHiddenIfDos(path: Path) {
+    if (org.apache.commons.lang.SystemUtils.IS_OS_WINDOWS) {
+      path.fileOption match {
+        case Some(file) =>
+          if (!file.isHidden)
+            Files.setAttribute(file.toPath, "dos:hidden", true)
+
+        case None =>
+      }
+    }
   }
 
   /**

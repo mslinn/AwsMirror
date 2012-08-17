@@ -83,6 +83,7 @@ The `upload` and `sync` commands continue uploading changed files until you pres
  1. You first need to run the program with the `auth` option so it can create a file in your home directory called `.aws` to
 hold your AWS access key and your AWS secret key for the AWS account you specify.
 You can store multiple authentications for each of the AWS accounts that you work with.
+This is a hidden file under Windows.
 ````
 aws auth yourAccountName
 ````
@@ -98,6 +99,7 @@ You can add more AWS accounts by running the same command again.
     Both of the following steps creates or modifies a file called `.s3` in the current directory.
     The `.s3` file defines the root of a source directory tree, and stores the account and bucket that the source directory
     tree is associated with. It also stores the timestamp of the last sync. Its format is JSON.
+    This is a hidden file under Windows.
     The file looks something like this:
 ````
 {"accountName":"memyselfi",

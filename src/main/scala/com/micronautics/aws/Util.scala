@@ -13,9 +13,9 @@ import java.text.SimpleDateFormat
 object Util {
   val dateFormat = new SimpleDateFormat("yyyy-MM-dd 'at' hh:mm:ss z")
 
-  def dtFmt(time: Long): String = dateFormat.format(new Date(time))
+  def dtFmt(time: Long): String = dateFormat.format(new Date(time)).trim
 
-  def dtFmt(date: Date): String = dateFormat.format(date)
+  def dtFmt(date: Date): String = dateFormat.format(date).trim
 
   /** @return -2 if s3File does not exist,
    *          -1 if s3File is older than local copy,

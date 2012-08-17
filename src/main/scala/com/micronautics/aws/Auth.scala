@@ -148,6 +148,7 @@ class Auth(args: Array[String]) {
     val generatedCredentials = generate(credentials)
     val prettyPrintedCredentials = generatedCredentials.replaceAll("(.*?:(\\[.*?\\],|.*?,))", "$0\n ") + "\n"
     credentialPath.write(prettyPrintedCredentials)
+    makeFileHiddenIfDos(credentialPath)
   }
 
   def listBuckets(accessKey: String, secretKey: String, accountName: String): String = {
