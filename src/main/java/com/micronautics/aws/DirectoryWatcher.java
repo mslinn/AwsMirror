@@ -1,7 +1,6 @@
 package com.micronautics.aws;
 
 import akka.dispatch.Futures;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.regex.Pattern;
 
-import static com.micronautics.aws.S3.relativize;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 public class DirectoryWatcher {
@@ -118,9 +116,9 @@ public class DirectoryWatcher {
     protected static long roundToNearestSecond(long time) { return (time / 1000L) * 1000L; }
 
     private class QueueTask extends TimerTask {
-        /** check queue for events old enough to take action on */
+        /** Check queue for events old enough to take action on */
         public void run() {
-            while (debounceQueue.poll()!=null && debounceQueue.peek().isDebounced()) {
+            while (debounceQueue.peek()!=null && debounceQueue.peek().isDebounced()) {
                 FileHistory fileHistory = debounceQueue.poll();
                 Path relativePath =  dir.relativize(fileHistory.getFile().toPath());
                 if (fileHistory.getFile().exists()) {
@@ -129,7 +127,7 @@ public class DirectoryWatcher {
                     if (Model.multithreadingEnabled)
                         Futures.future(new UploadOne(s3Key, fileHistory.getFile()), Main.system().dispatcher());
                     else
-                        new UploadOne(s3Key, fileHistory.getFile()).call(); // disable multithreading
+                        new UploadOne(s3Key, fileHistory.getFile()).call();
                 } else {
                     logger.debug("DirectoryWatcher deleting '" + relativePath + "' from AWS S3.");
                     Model.s3.deleteObject(Model.bucketName, relativePath.toString());
@@ -146,7 +144,7 @@ public class DirectoryWatcher {
             FileHistory fileHistory = get(relativePath);
             Path path = Paths.get(relativePath);
             if (fileHistory==null)
-                fileHistory = new FileHistory(path); // check that this is actually relative
+                fileHistory = new FileHistory(path);
             FileEvent fileEvent = new FileEvent(path, event);
             fileHistory.events.add(fileEvent);
             put(path, fileHistory);
@@ -190,7 +188,7 @@ public class DirectoryWatcher {
         public Path getPath() { return path; }
 
         public boolean isDebounced() {
-            FileEvent[] eventArray = (FileEvent[]) events.toArray(new FileEvent[events.size()]); // get consistent view
+            FileEvent[] eventArray = events.toArray(new FileEvent[events.size()]); // get consistent view
             int n = eventArray.length;
             long lastEventTime = eventArray[n-1].getTime();
             long now = System.currentTimeMillis();
