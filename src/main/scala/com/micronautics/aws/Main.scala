@@ -100,7 +100,7 @@ object Main extends App {
       case "delete" :: rest =>
         new Delete(rest.toArray)
 
-      case "download" :: rest =>
+      case ("download" | "down") :: rest =>
         new Download(rest.toArray)
 
       case "empty" :: rest =>
@@ -115,7 +115,7 @@ object Main extends App {
       case "sync" :: rest =>
         new Sync(rest.toArray)
 
-      case "upload" :: rest =>
+      case ("upload" | "up") :: rest =>
         new Upload(rest.toArray)
 
       case wtf =>
@@ -151,7 +151,7 @@ object Main extends App {
         |        create specified bucket for accountName, or bucket specified in relevent .s3 file, enables web access and uploads a short index.html file
         |    delete [accountName bucketName]
         |        delete specified bucket from AWS account, or bucket specified in relevent .s3 file
-        |    download
+        |    download, down
         |      download bucket specified in relevent .s3 file to the entire tree
         |    empty [bucketName]
         |      empty specified bucket, or bucket specified in relevent .s3 file
@@ -160,7 +160,7 @@ object Main extends App {
         |      If accountName and bucketName are not specified, display contents of .s3 file in current directory or a parent directory.
         |      Otherwise create or modify .s3 file in current directory by setting accountName and bucketName
         |    sync    sync directory tree to specified bucket
-        |    upload  upload entire directory tree to bucket specified in relevent .s3 file
+        |    upload, up  upload entire directory tree to bucket specified in relevent .s3 file
       """.stripMargin)
     System.exit(0)
   }
