@@ -28,7 +28,7 @@ class Create(args: Array[String]) {
     case 0 => // create
       createFromS3File()
 
-    case 1 => // create accountName bucketName
+    case 2 => // create accountName bucketName
       createFromCmdLine()
 
     case _ =>

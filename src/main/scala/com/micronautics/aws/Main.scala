@@ -148,7 +148,7 @@ object Main extends App {
         |      list   - list authentications
         |      modify - accountName modify authentication for specified AWS account name
         |    create [accountName bucketName]
-        |        create specified bucket for accountName, or bucket specified in relevent .s3 file, enables web acces and uploads a short index.html file
+        |        create specified bucket for accountName, or bucket specified in relevent .s3 file, enables web access and uploads a short index.html file
         |    delete [accountName bucketName]
         |        delete specified bucket from AWS account, or bucket specified in relevent .s3 file
         |    download
