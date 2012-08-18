@@ -8,23 +8,36 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.regex.Pattern;
 
+import static com.micronautics.aws.S3.relativize;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 public class DirectoryWatcher {
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(DirectoryWatcher.class);
     private WatchService watcher = null;
     private final Path dir;
     private final String rootDir;
     private final int rootDirLen;
-    private final Map<WatchKey, Path> keys = new HashMap<WatchKey, Path>();
+    private final Map<WatchKey, Path> keys = new HashMap<>();
+    private final Timer timer = new Timer();
 
-    /** ENTRY_CREATE was always followed by one to 3 ENTRY_MODIFY (in testing) - up to 4.5 seconds afterwards!
-     * This called for some crazy login in watch(). */
+    /** Time by which all file operations should have settled */
+    protected long debounceTime = 10 * 1000L;
+
+    /** Milliseconds between checks for debounced file events */
+    protected long debounceCheckInterval = 250;
+
+    protected HistoryMap historyMap = new HistoryMap();
+
+    protected DebounceQueue debounceQueue = new DebounceQueue();
+
+
+    /** On Windows, using DreamWeaver, ENTRY_CREATE was always followed by one to 3 ENTRY_MODIFY (in testing) -
+     * up to 4.5 seconds afterwards! */
     public DirectoryWatcher(Path watchedPath) throws IOException{
         this.dir = watchedPath;
         this.rootDir = dir.toFile().getAbsolutePath();
@@ -36,9 +49,10 @@ public class DirectoryWatcher {
             keys.put(watchKey, relativePath);
             //logger.debug("watchKey " + watchKey + " => " + relativePath.toString());
         }
+        timer.schedule(new QueueTask(), debounceCheckInterval, debounceCheckInterval);
     }
 
-    protected boolean ignore(File file) {
+    protected static boolean ignore(File file) {
         for (Pattern pattern : Model.ignoredPatterns)
             if (pattern.matcher(file.getName()).matches()) {
                 System.out.println("DirectoryWatcher ignoring " + file.getName());
@@ -47,7 +61,7 @@ public class DirectoryWatcher {
         return false;
     }
 
-    protected ArrayList<Path> subPaths(Path path, ArrayList<Path> result) {
+    protected static ArrayList<Path> subPaths(Path path, ArrayList<Path> result) {
         logger.debug("  Watching subPath " + path);
         if (path.toFile().isDirectory() && result.size()==0)
             result.add(path);
@@ -63,11 +77,7 @@ public class DirectoryWatcher {
 
     /** Process all events for the key queued to the watcher. */
     public void watch() {
-        Path lastPath = null;
-        long lastTime = new DateTime().getMillis();
-        long lastModified = 0L;
         for (;;) {
-            // wait for key to be signaled
             WatchKey key;
             try {
                 key = watcher.take();
@@ -80,62 +90,138 @@ public class DirectoryWatcher {
 
             for (WatchEvent<?> event : key.pollEvents()) {
                 WatchEvent.Kind<?> kind = event.kind();
-
-                // An OVERFLOW event occurs when events are lost or discarded.
-                if (kind == OVERFLOW)
-                    continue;
-
-                // The filename is the context of the event.
-                WatchEvent<Path> ev = (WatchEvent<Path>) event;
+                @SuppressWarnings("unchecked") WatchEvent<Path> ev = (WatchEvent<Path>) event;
                 Path path = ev.context();
+                String relativePath = (basePath.toString() + "/" + path.toString()).replace("\\", "/");
 
+                if (kind == OVERFLOW) { // were events lost or discarded?
+                    logger.warn("DirectoryWatcher got an OVERFLOW event for " + relativePath);
+                    continue;
+                }
                 if (ignore(path.toFile())) {
                     logger.debug("DirectoryWatcher ignoring '" + path.getFileName() + "'");
-                    return;
-                }
-
-                long thisTime = new DateTime().getMillis();
-                long dt = thisTime - lastTime;
-
-                if (kind==ENTRY_DELETE) {
-                    lastModified = 0L;
-                    lastPath = path;
-                    lastTime = thisTime;
-
-                    String relativePath = ("/" + basePath.toString() + "/" + path.toString()).replace("\\", "/");
-                    logger.debug("DirectoryWatcher deleting '" + relativePath + "' from AWS S3; " + kind + "; dt=" + dt + "ms");
-                    Model.s3.deleteObject(Model.bucketName, relativePath);
                     continue;
                 }
-
-                boolean differentFile = lastPath==null || path.compareTo(lastPath)!=0;
-                if (!differentFile && lastModified==path.toFile().lastModified() && kind==ENTRY_MODIFY) {
-                    logger.debug("DirectoryWatcher skipping '" + path + "'; " + kind + "; lastModified=" + lastModified);
-                    continue;
-                }
-
-                if (differentFile || (!differentFile && dt>150)) {
-                    logger.debug("DirectoryWatcher starting upload of '" + path + "'; " + kind + "; dt=" + dt + "ms");
-                    String s3Key = path.toString();
-                    //Futures.future(new UploadOne(s3Key, path.toFile()), Main.system().dispatcher());
-                    new UploadOne(s3Key, path.toFile()).call(); // disable multithreading
-                } else {
-                    //System.out.println("Skipping duplicate " + path + "; " + kind + "; dt=" + dt);
-                }
-                lastPath = path;
-                lastTime = thisTime;
-                lastModified = path.toFile().lastModified();
-
-                // Resolve the filename against the directory.
-                // If the filename is "test" and the directory is "foo", the resolved name is "test/foo".
-//                    Path child = dir.resolve(filename);
-//                    if (!Files.probeContentType(child).equals("text/plain")) {
+                historyMap.update(relativePath, event);
+                //logger.debug("DirectoryWatcher deleting '" + relativePath + "' from AWS S3; " + kind + "; dt=" + dt + "ms");
+                // Model.s3.deleteObject(Model.bucketName, relativePath);
             }
-            // Reset the key -- this step is critical if you want to receive further watch events.
+
+            // Reset the key -- important in order to receive further watch events.
             // If the key is no longer valid, the directory is inaccessible so exit the loop.
-            boolean valid = key.reset();
-            if (!valid)
+            if (!key.reset())
                 break;
         }
+    }
+
+    /** @param time milliseconds */
+    protected static long roundToNearestSecond(long time) { return (time / 1000L) * 1000L; }
+
+    private class QueueTask extends TimerTask {
+        /** check queue for events old enough to take action on */
+        public void run() {
+            while (debounceQueue.poll()!=null && debounceQueue.peek().isDebounced()) {
+                FileHistory fileHistory = debounceQueue.poll();
+                Path relativePath =  dir.relativize(fileHistory.getFile().toPath());
+                if (fileHistory.getFile().exists()) {
+                    logger.debug("DirectoryWatcher uploading '" + relativePath + "' from AWS S3.");
+                    String s3Key = relativePath.toString();
+                    if (Model.multithreadingEnabled)
+                        Futures.future(new UploadOne(s3Key, fileHistory.getFile()), Main.system().dispatcher());
+                    else
+                        new UploadOne(s3Key, fileHistory.getFile()).call(); // disable multithreading
+                } else {
+                    logger.debug("DirectoryWatcher deleting '" + relativePath + "' from AWS S3.");
+                    Model.s3.deleteObject(Model.bucketName, relativePath.toString());
+                }
+                historyMap.remove(fileHistory);
+            }
+        }
+    }
+
+    protected class DebounceQueue extends PriorityQueue<FileHistory> {}
+
+    private class HistoryMap extends ConcurrentHashMap<Path, FileHistory> {
+        public void update(String relativePath, WatchEvent<?> event) {
+            // todo put
+        }
+    }
+
+    /** History and present status of file that has recently had one or more FileEvents.
+     * Sort order is FileHistory with oldest event at tail of the queue first. */
+    protected class FileHistory implements Comparable<FileHistory> {
+        private ConcurrentLinkedDeque<FileEvent> events = new ConcurrentLinkedDeque<>();
+        private Path path;
+        private File file;
+
+        public FileHistory(Path path) {
+            this.path = path;
+            this.file = path.toFile();
+        }
+
+        @Override
+        public int compareTo(FileHistory that) {
+            long thisTime = this.events.peekLast().getTime();
+            long thatTime = that.events.peekLast().getTime();
+            if (thisTime<thatTime)
+                return -1;
+            if (thisTime>thatTime)
+                return 1;
+            return 0;
+        }
+
+        /** @return last modified time, in milliseconds, or 0 if the file does not exist.
+         * Time is rounded to the nearest second for consistency on all OSes.
+         * Once uploaded to S3, we need the same behavior on all OSes, and some OSes only support second resolution. */
+        public long getLastModified() {
+            if (file.exists())
+              return roundToNearestSecond(file.lastModified());
+            return 0;
+        }
+
+        public File getFile() { return file; }
+
+        public Path getPath() { return path; }
+
+        public boolean isDebounced() {
+            FileEvent[] eventArray = (FileEvent[]) events.toArray(new FileEvent[events.size()]); // get consistent view
+            int n = eventArray.length;
+            long lastEventTime = eventArray[n-1].getTime();
+            long now = System.currentTimeMillis();
+            if (now - lastEventTime >= debounceTime)
+                return true;
+
+            long prevEventTime = eventArray[n-1].getTime();
+            return lastEventTime - prevEventTime >= debounceTime;
+        }
+    }
+
+    /** Record of something happening to a file (delete, create, modify). */
+    protected class FileEvent {
+        private WatchEvent<?> watchEvent;
+
+        /** Timestamp of event, in milliseconds, without rounding */
+        private long time = System.currentTimeMillis();
+        private Path path;
+
+        /** @param path is fully qualified Path of file referenced by watchEvent */
+        public FileEvent(Path path, WatchEvent<?> watchEvent) {
+            this.path = path;
+            this.watchEvent = watchEvent;
+        }
+
+        public File getFile() { return path.toFile(); }
+
+        /** @return last modified time, in milliseconds, rounded to the nearest second for consistency on all OSes.
+         * Once uploaded to S3, we need the same behavior on all OSes, and some OSes only support second resolution. */
+        public long getLastModified() { return roundToNearestSecond(path.toFile().lastModified()); }
+
+        public Path getPath() { return path; }
+
+        public long getTime() { return time; }
+
+        public WatchEvent.Kind<?> getKind() { return watchEvent.kind(); }
+
+        public WatchEvent<?> getWatchEvent() { return watchEvent; }
     }
 }

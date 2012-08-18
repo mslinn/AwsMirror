@@ -24,7 +24,6 @@ import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
-import com.sun.deploy.util.SystemUtils
 import java.nio.file.Files
 
 object Main extends App {
