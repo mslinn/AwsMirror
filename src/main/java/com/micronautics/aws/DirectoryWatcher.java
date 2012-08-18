@@ -143,7 +143,13 @@ public class DirectoryWatcher {
 
     private class HistoryMap extends ConcurrentHashMap<Path, FileHistory> {
         public void update(String relativePath, WatchEvent<?> event) {
-            // todo put
+            FileHistory fileHistory = get(relativePath);
+            Path path = Paths.get(relativePath);
+            if (fileHistory==null)
+                fileHistory = new FileHistory(path); // check that this is actually relative
+            FileEvent fileEvent = new FileEvent(path, event);
+            fileHistory.events.add(fileEvent);
+            put(path, fileHistory);
         }
     }
 
