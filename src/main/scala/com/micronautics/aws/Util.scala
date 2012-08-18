@@ -29,11 +29,13 @@ object Util {
     if (null==node)
       return s3FileDoesNotExist
 
-    val s3NodeLastModified: Date = node.getLastModified
-    //println("s3NodeLastModified.getTime=" + s3NodeLastModified.getTime + "; file.lastModified=" + file.lastModified)
-    val result: Int = if (s3NodeLastModified.getTime == file.lastModified)
+    // Some OSes only truncate lastModified time to the nearest second, so truncate both times to nearest second
+    val s3NodeLastModified: Long = node.getLastModified.getTime / 1000L
+    val fileLastModified: Long = file.lastModified / 1000L
+    //println("s3NodeLastModified=" + s3NodeLastModified + "; fileLastModified=" + fileLastModified)
+    val result: Int = if (s3NodeLastModified == fileLastModified)
         s3FileSameAgeAsLocal
-      else if (s3NodeLastModified.getTime < file.lastModified)
+      else if (s3NodeLastModified < fileLastModified)
         s3FileIsOlderThanLocal
       else
         s3FileNewerThanLocal

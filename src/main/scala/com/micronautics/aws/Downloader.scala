@@ -113,7 +113,7 @@ class Downloader(overwrite: Boolean) {
 
   def downloadOne(localDir: File, node: S3ObjectSummary, outFile: File): Unit = {
     FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
-    outFile.setLastModified(node.getLastModified().getTime)
+    outFile.setLastModified(node.getLastModified().getTime) // some OSes only support resolution to the nearest second
     logger.info("Downloaded '%s' (last modified %s, %d bytes).".
       format(relativeFileName(localDir, outFile), node.getKey, dtFmt(node.getLastModified)))
     if (node.getSize!=outFile.length())
