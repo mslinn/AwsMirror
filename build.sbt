@@ -9,11 +9,9 @@ version := "0.1.0-SNAPSHOT"
 
 scalaVersion := "2.9.2"
 
-javaOptions ++= Seq("-deprecation", "-unchecked", "-Xlint:unchecked")
+scalacOptions ++= Seq("-deprecation", "-unchecked", "-encoding", "utf8")
 
-scalacOptions ++= Seq("-deprecation", "-unchecked")
-
-javacOptions ++= Seq("-source", "1.7", "-target", "1.7", "-g:vars")
+javacOptions ++= Seq("-Xlint:deprecation", "-Xlint:unchecked", "-source", "1.7", "-target", "1.7", "-g:vars")
 
 scalacOptions in (Compile, doc) <++= baseDirectory.map {
   (bd: File) => Seq[String](
