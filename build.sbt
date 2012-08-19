@@ -1,5 +1,8 @@
-
 import com.typesafe.startscript.StartScriptPlugin
+
+seq(ProguardPlugin.proguardSettings :_*)
+
+proguardOptions += keepMain("Main")
 
 organization := "Micronautics Research"
 
