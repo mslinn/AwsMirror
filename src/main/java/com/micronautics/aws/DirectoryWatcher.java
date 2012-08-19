@@ -6,13 +6,25 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.regex.Pattern;
 
-import static java.nio.file.StandardWatchEventKinds.*;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 public class DirectoryWatcher {
     private static final Logger logger = LoggerFactory.getLogger(DirectoryWatcher.class);
@@ -109,8 +121,6 @@ public class DirectoryWatcher {
                     continue;
                 }
                 historyMap.update(relativePath, event);
-                //logger.debug("DirectoryWatcher deleting '" + relativePath + "' from AWS S3; " + kind + "; dt=" + dt + "ms");
-                // Model.s3.deleteObject(Model.bucketName, relativePath);
             }
 
             // Reset the key -- important in order to receive further watch events.
@@ -131,8 +141,6 @@ public class DirectoryWatcher {
                 logger.debug("About to debounceQueue.poll()");
                 FileHistory fileHistory = debounceQueue.poll();
                 logger.debug("About to dir.relativize(); dir=" + dir + "; fileHistory.getFile().toPath()=" + fileHistory.getFile().toPath());
-//                fileHistory.getFile().toPath();
-//                logger.debug("asdf");
                 Path relativePath = fileHistory.getFile().toPath();
                 logger.debug("Popped off debounceQueue: " + fileHistory + "; relativePath=" + relativePath);
                 if (fileHistory.getFile().exists()) {
@@ -152,7 +160,7 @@ public class DirectoryWatcher {
         }
     }
 
-    protected class DebounceQueue extends PriorityQueue<FileHistory> {}
+    protected class DebounceQueue extends PriorityBlockingQueue<FileHistory> {}
 
     private class HistoryMap extends ConcurrentHashMap<Path, FileHistory> {
         public void update(String relativePath, WatchEvent<?> event) {
@@ -216,15 +224,6 @@ public class DirectoryWatcher {
                 logger.debug("isDebounced returning true because of no activity for " + (now - lastEventTime) + " ms");
                 return true;
             }
-
-            /* if (n>1) {
-                long prevEventTime = eventArray[n-1].getTime();
-                boolean result = lastEventTime - prevEventTime >= debounceTime;
-                logger.debug("fileHistory has " + n + " items; isDebounced returning " + result + " because " + (lastEventTime - prevEventTime) + " ms elapsed between " + lastEventTime + "ms and " + prevEventTime + "ms.");
-                return result;
-            }
-            logger.debug("isDebounced returning false because the single item in events has only been there " + (now - lastEventTime) + " ms.");
-            */
             return false;
         }
     }
