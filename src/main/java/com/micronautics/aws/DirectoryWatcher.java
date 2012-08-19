@@ -32,6 +32,7 @@ public class DirectoryWatcher {
     protected HistoryMap historyMap = new HistoryMap();
 
     protected DebounceQueue debounceQueue = new DebounceQueue();
+    protected QueueTask queueTask = new QueueTask();
 
 
     /** On Windows, using DreamWeaver, ENTRY_CREATE was always followed by one to 3 ENTRY_MODIFY (in testing) -
@@ -45,9 +46,9 @@ public class DirectoryWatcher {
             WatchKey watchKey = path.register(watcher, /*ENTRY_CREATE, */ENTRY_DELETE, ENTRY_MODIFY);
             Path relativePath = watchedPath.relativize(path);
             keys.put(watchKey, relativePath);
-            //logger.debug("watchKey " + watchKey + " => " + relativePath.toString());
+            logger.debug("watchKey " + watchKey + " => " + relativePath.toString());
         }
-        timer.schedule(new QueueTask(), debounceCheckInterval, debounceCheckInterval);
+        timer.schedule(queueTask, debounceCheckInterval, debounceCheckInterval);
     }
 
     protected static boolean ignore(File file) {
@@ -84,13 +85,20 @@ public class DirectoryWatcher {
             }
 
             Path basePath = keys.get(key);
-            logger.debug("basePath=" + basePath);
+            logger.debug("key=" + key + "; basePath=" + basePath);
 
             for (WatchEvent<?> event : key.pollEvents()) {
                 WatchEvent.Kind<?> kind = event.kind();
                 @SuppressWarnings("unchecked") WatchEvent<Path> ev = (WatchEvent<Path>) event;
                 Path path = ev.context();
-                String relativePath = (basePath.toString() + "/" + path.toString()).replace("\\", "/");
+
+                String relativePath = "";
+                if (basePath.toString().length()>0)
+                    relativePath = basePath.toString() + "/";
+                relativePath += path.toString();
+                relativePath = relativePath.replace("\\", "/");
+
+                logger.debug("path=" + path + "; relativePath=" + relativePath);
 
                 if (kind == OVERFLOW) { // were events lost or discarded?
                     logger.warn("DirectoryWatcher got an OVERFLOW event for " + relativePath);
@@ -118,9 +126,15 @@ public class DirectoryWatcher {
     private class QueueTask extends TimerTask {
         /** Check queue for events old enough to take action on */
         public void run() {
+            logger.debug("Entering QueueTask.run(); debounceQueue has " + debounceQueue.size() + " items in it.");
             while (debounceQueue.peek()!=null && debounceQueue.peek().isDebounced()) {
+                logger.debug("About to debounceQueue.poll()");
                 FileHistory fileHistory = debounceQueue.poll();
-                Path relativePath =  dir.relativize(fileHistory.getFile().toPath());
+                logger.debug("About to dir.relativize(); dir=" + dir + "; fileHistory.getFile().toPath()=" + fileHistory.getFile().toPath());
+//                fileHistory.getFile().toPath();
+//                logger.debug("asdf");
+                Path relativePath = fileHistory.getFile().toPath();
+                logger.debug("Popped off debounceQueue: " + fileHistory + "; relativePath=" + relativePath);
                 if (fileHistory.getFile().exists()) {
                     logger.debug("DirectoryWatcher uploading '" + relativePath + "' from AWS S3.");
                     String s3Key = relativePath.toString();
@@ -132,7 +146,8 @@ public class DirectoryWatcher {
                     logger.debug("DirectoryWatcher deleting '" + relativePath + "' from AWS S3.");
                     Model.s3.deleteObject(Model.bucketName, relativePath.toString());
                 }
-                historyMap.remove(fileHistory);
+                historyMap.remove(relativePath);
+                logger.debug("Removed '" + relativePath + "' from historyMap; size=" + historyMap.size());
             }
         }
     }
@@ -141,13 +156,18 @@ public class DirectoryWatcher {
 
     private class HistoryMap extends ConcurrentHashMap<Path, FileHistory> {
         public void update(String relativePath, WatchEvent<?> event) {
-            FileHistory fileHistory = get(relativePath);
+            logger.debug("HistoryMap.update; ");
             Path path = Paths.get(relativePath);
+            FileHistory fileHistory = get(path);
             if (fileHistory==null)
                 fileHistory = new FileHistory(path);
             FileEvent fileEvent = new FileEvent(path, event);
             fileHistory.events.add(fileEvent);
+            logger.debug("Added fileEvent to fileHistory.events with time=" + fileEvent.getTime());
             put(path, fileHistory);
+            logger.debug("Put fileHistory to HistoryMap");
+            if (!debounceQueue.contains(fileHistory))
+                debounceQueue.add(fileHistory);
         }
     }
 
@@ -192,11 +212,20 @@ public class DirectoryWatcher {
             int n = eventArray.length;
             long lastEventTime = eventArray[n-1].getTime();
             long now = System.currentTimeMillis();
-            if (now - lastEventTime >= debounceTime)
+            if (now - lastEventTime >= debounceTime) {
+                logger.debug("isDebounced returning true because of no activity for " + (now - lastEventTime) + " ms");
                 return true;
+            }
 
-            long prevEventTime = eventArray[n-1].getTime();
-            return lastEventTime - prevEventTime >= debounceTime;
+            /* if (n>1) {
+                long prevEventTime = eventArray[n-1].getTime();
+                boolean result = lastEventTime - prevEventTime >= debounceTime;
+                logger.debug("fileHistory has " + n + " items; isDebounced returning " + result + " because " + (lastEventTime - prevEventTime) + " ms elapsed between " + lastEventTime + "ms and " + prevEventTime + "ms.");
+                return result;
+            }
+            logger.debug("isDebounced returning false because the single item in events has only been there " + (now - lastEventTime) + " ms.");
+            */
+            return false;
         }
     }
 
