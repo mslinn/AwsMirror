@@ -133,9 +133,10 @@ class UploadOne implements Callable<PutObjectResult> {
     private String key;
     private File file;
 
+    /** @param key backslashes are converted to forward slashes */
     public UploadOne(String key, File file) {
         this.bucketName = Model.bucketName;
-        this.key = key;
+        this.key = key.replace("\\", "/");
         this.file = file;
     }
 
