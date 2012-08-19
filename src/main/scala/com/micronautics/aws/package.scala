@@ -48,7 +48,7 @@ object AWS {
 
 object AuthAction extends Enumeration {
    type AuthAction = Value
-   val add, delete, download, list, modify = Value
+   val add, delete, list, modify = Value
  }
 
 case class S3File(accountName: String,
