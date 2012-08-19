@@ -115,12 +115,12 @@ class Downloader(overwrite: Boolean) {
     FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
     outFile.setLastModified(node.getLastModified().getTime) // some OSes only support resolution to the nearest second
     logger.info("Downloaded '%s' (last modified %s, %d bytes).".
-      format(relativeFileName(localDir, outFile), node.getKey, dtFmt(node.getLastModified)))
+      format(relativeFileName(localDir, outFile), dtFmt(node.getLastModified), outFile.length()))
     if (node.getSize!=outFile.length())
       logger.error("Error: %s has different length (%d) than remote version (%d).".
         format(outFile.getAbsolutePath, node.getSize))
-    if (node.getLastModified!=outFile.lastModified())
-      logger.error("Error: %s has last modified date (%s) than remote version (%s).".
+    if (node.getLastModified.getTime!=outFile.lastModified())
+      logger.error("Error: %s has last modified date (%s), which differs from remote version (%s).".
         format(outFile.getAbsolutePath, dtFmt(outFile.lastModified), dtFmt(node.getLastModified)))
   }
 
