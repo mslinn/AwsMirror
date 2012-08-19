@@ -38,6 +38,7 @@ libraryDependencies ++= Seq(
   "com.github.scala-incubator.io" %  "scala-io-core_2.9.1" % "0.4.0"  withSources(),
   "com.github.scala-incubator.io" %  "scala-io-file_2.9.1" % "0.4.0"  withSources(),
   "junit"                         %  "junit"               % "4.10"   % "test" withSources(),
+  "org.clapper"                   %% "grizzled-scala"      % "1.0.13" withSources(),
   "org.scalatest"                 %  "scalatest_2.9.2"     % "1.7.1"  % "test" withSources(),
   "org.scala-tools.time"          %  "time_2.9.1"          % "0.5",
   "org.scribe"                    %  "scribe"              % "1.3.1"  withSources(),

@@ -134,29 +134,37 @@ public class DirectoryWatcher {
     protected static long roundToNearestSecond(long time) { return (time / 1000L) * 1000L; }
 
     private class QueueTask extends TimerTask {
+
         /** Check queue for events old enough to take action on */
         public void run() {
             logger.debug("Entering QueueTask.run(); debounceQueue has " + debounceQueue.size() + " items in it.");
             while (debounceQueue.peek()!=null && debounceQueue.peek().isDebounced()) {
-                logger.debug("About to debounceQueue.poll()");
                 FileHistory fileHistory = debounceQueue.poll();
-                logger.debug("About to dir.relativize(); dir=" + dir + "; fileHistory.getFile().toPath()=" + fileHistory.getFile().toPath());
                 Path relativePath = fileHistory.getFile().toPath();
-                logger.debug("Popped off debounceQueue: " + fileHistory + "; relativePath=" + relativePath);
+                String debugMsg = fileHistory.eventTimeSpan() + " ms between first and last events";
                 if (fileHistory.getFile().exists()) {
-                    logger.debug("DirectoryWatcher uploading '" + relativePath + "' from AWS S3.");
+                    Model.modificationTimes.add(fileHistory.eventTimeSpan());
+                    logger.debug("Uploading '" + relativePath + "' to AWS S3; " + debugMsg);
                     String s3Key = relativePath.toString();
                     if (Model.multithreadingEnabled)
                         Futures.future(new UploadOne(s3Key, fileHistory.getFile()), Main.system().dispatcher());
                     else
                         new UploadOne(s3Key, fileHistory.getFile()).call();
                 } else {
-                    logger.debug("DirectoryWatcher deleting '" + relativePath + "' from AWS S3.");
-                    Model.s3.deleteObject(Model.bucketName, relativePath.toString());
+                    logger.debug("Deleting '" + relativePath + "' from AWS S3; " + debugMsg);
+                    Model.deletionTimes.add(fileHistory.eventTimeSpan());
+                    try {
+                      Model.s3.deleteObject(Model.bucketName, relativePath.toString());
+                    } catch (Exception e) {
+                        System.out.println("Error deleting '" + relativePath.toString() + "' from AWS S3; " + e.getMessage());
+                    }
                 }
                 historyMap.remove(relativePath);
-                logger.debug("Removed '" + relativePath + "' from historyMap; size=" + historyMap.size());
+                //logger.debug("Removed '" + relativePath + "' from historyMap; size=" + historyMap.size());
             }
+            String stats = Util.computeStats(Model.modificationTimes, Model.deletionTimes);
+            if (stats.length()>0)
+              logger.info(stats);
         }
     }
 
@@ -210,6 +218,9 @@ public class DirectoryWatcher {
               return roundToNearestSecond(file.lastModified());
             return 0;
         }
+
+        /** ms between first and last events. If only one event, 0 is returned. */
+        public long eventTimeSpan() { return events.peekLast().getTime() - events.peekFirst().getTime(); }
 
         public File getFile() { return file; }
 

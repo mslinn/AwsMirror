@@ -6,7 +6,9 @@ import java.util.Date
 import scala.collection.JavaConversions._
 import Model._
 import java.text.SimpleDateFormat
-
+import grizzled.math.stats._
+import java.util.ArrayList
+import scala.collection.JavaConversions._
 
 /**
  * @author Mike Slinn */
@@ -16,6 +18,35 @@ object Util {
   def dtFmt(time: Long): String = dateFormat.format(new Date(time)).trim
 
   def dtFmt(date: Date): String = dateFormat.format(date).trim
+
+  /** Type erasure means that Java interop does not allow the parameters to be specified as ArrayList[Long] */
+  def computeStats(modificationTimes: ArrayList[_], deletionTimes: ArrayList[_]): String = {
+    val editResult = computeStatString("Edit time", modificationTimes.asInstanceOf[ArrayList[Long]])
+    val deleteResult = computeStatString("Deletion time", deletionTimes.asInstanceOf[ArrayList[Long]])
+    if (editResult.length>0 && deleteResult.length>0)
+      return editResult + "\n" + deleteResult
+
+    if (editResult.length>0)
+      return editResult
+
+    if (deleteResult.length>0)
+      return deleteResult
+
+    return ""
+  }
+
+  def computeStatString(label: String, values: ArrayList[Long]): String = {
+    if (values.length==0)
+      return ""
+
+    // std deviation is +/- so subtract from mean and double it to show uncertainty range
+    // midpoint of uncertainty is therefore the mean
+    val millisMean = arithmeticMean(values: _*).asInstanceOf[Long]
+    val stdDev = popStdDev(values: _*).asInstanceOf[Long]
+    val result = "%s mean of %d values: %d ms, +/- %d ms (1 std dev: from %d ms to %d ms, 2 std devs: from %d ms to %d ms)".
+      format(label, values.length, millisMean, stdDev, millisMean - stdDev, millisMean + stdDev, millisMean - 2*stdDev, millisMean + 2*stdDev)
+    return result
+  }
 
   /** @return -2 if s3File does not exist,
    *          -1 if s3File is older than local copy,
