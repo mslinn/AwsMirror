@@ -20,7 +20,7 @@ import com.micronautics.aws.Main._
 class Delete(args: Array[String]) {
   if (!credentialPath.exists) {
     println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.path))
-    System.exit(-1)
+    sys.exit(-1)
   }
 
   args.length match {
@@ -31,7 +31,7 @@ class Delete(args: Array[String]) {
       findS3FileObject match {
         case None =>
           println("No .s3 file found in this directory or its parents")
-          System.exit(0)
+          sys.exit(0)
 
         case Some(s3File) =>
           s3Option(s3File.accountName) match {
@@ -39,9 +39,15 @@ class Delete(args: Array[String]) {
               println("AWS credentials did not match for AWS account '%s' and bucket '%s'".format(s3File.accountName, s3File.bucketName))
 
             case Some(s3) =>
-              s3.deleteBucket(s3File.bucketName)
-              println("AWS bucket '%s' deleted from account '%s'. %s was not deleted in case you want to recreate the bucket easily with the create subcommand.".
-                format(s3File.bucketName, s3File.accountName, findS3File().get.getCanonicalPath))
+              try {
+                s3.deleteBucket(s3File.bucketName)
+                println("AWS bucket '%s' deleted from account '%s'. %s was not deleted in case you want to recreate the bucket easily with the create subcommand.".
+                  format(s3File.bucketName, s3File.accountName, findS3File().get.getCanonicalPath))
+              } catch {
+                case e =>
+                  print("Error deleting '%s' deleted from account '%s'. ".format(s3File.bucketName, s3File.accountName))
+                  println(e.getMessage + ".")
+              }
           }
       }
 
@@ -54,19 +60,25 @@ class Delete(args: Array[String]) {
 
         case Some(credentials) =>
           val s3 = new S3(credentials.accessKey, credentials.secretKey)
-          s3.deleteBucket(bucketName)
-          print("AWS bucket '%s' deleted from account '%s'.".format(bucketName, accountName))
-          findS3File() match {
-            case None =>
-              println
+          try {
+            s3.deleteBucket(bucketName)
+            print("AWS bucket '%s' deleted from account '%s'.".format(bucketName, accountName))
+            findS3File() match {
+              case None =>
+                println
 
-            case Some(file) =>
-              println(" \n%s was not deleted in case you want to recreate the bucket with the create subcommand.".format(file.getCanonicalPath))
+              case Some(file) =>
+                println(" \n%s was not deleted in case you want to recreate the bucket with the create subcommand.".format(file.getCanonicalPath))
+            }
+          } catch {
+            case e=>
+              print("Error deleting '%s' deleted from account '%s'. ".format(bucketName, accountName))
+              println(e.getMessage + ".")
           }
       }
 
     case _ =>
-      println("Error: Too many arguments provided for delete")
+      println("Error: Too many arguments provided for delete.")
       help
   }
 }
