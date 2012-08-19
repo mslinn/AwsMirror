@@ -143,10 +143,10 @@ object Main extends App {
         |      -V    more verbose output
         |  and <action> is one of:
         |    auth   provide authentication for an additional AWS account
-        |      add accountName - you will be prompted to add credentials for AWS accountName
-        |      delete - accountName delete authentication for specified AWS account name
-        |      list   - list authentications
-        |      modify - accountName modify authentication for specified AWS account name
+        |      add accountName      you will be prompted to add credentials for AWS accountName
+        |      delete accountName   delete authentication for specified AWS account name
+        |      list                 list authentications
+        |      modify accountName   modify authentication for specified AWS account name
         |    create [accountName bucketName]
         |        create specified bucket for accountName, or bucket specified in relevent .s3 file, enables web access and uploads a short index.html file
         |    delete [accountName bucketName]
