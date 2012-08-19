@@ -54,25 +54,32 @@ aws subcommandsGoHere
 The help message shows all the subcommands:
 
 ````
-Usage: aws <action>
+Usage: aws <option> <action>
   Where <option> is one of:
-    -v    less verbose output
-    -V    more verbose output
+      -m    multithreading enabled
+      -M    multithreading disabled
+      -v    less verbose output
+      -V    more verbose output
   and <action> is one of:
-    auth                  provide authentication for an additional AWS account
-                          delete - accountName delete authentication for specified AWS account name
-                          list   - list authentications
-                          modify - accountName modify authentication for specified AWS account name
-    create [bucketName]   create specified bucket, or bucket specified in relevent .s3 file, enables web acces and uploads a short index.html file
-    delete [bucketName]   delete specified bucket, or bucket specified in relevent .s3 file
-    download              download directory tree from bucket specified in relevent .s3 file
-    empty [bucketName]    empty specified bucket, or bucket specified in relevent .s3 file
-    help                  print this message and exit
+    auth   provide authentication for an additional AWS account
+                          add accountName      you will be prompted to add credentials for AWS accountName
+                          delete accountName   delete authentication for specified AWS account name
+                          list                 list authentications
+                          modify accountName   modify authentication for specified AWS account name
+    create [accountName bucketName]
+        create specified bucket for accountName, or bucket specified in relevent .s3 file, enables web access and uploads a short index.html file
+    delete [accountName bucketName]
+        delete specified bucket from AWS account, or bucket specified in relevent .s3 file
+    download, down
+      download bucket specified in relevent .s3 file to the entire tree
+    empty [bucketName]
+      empty specified bucket, or bucket specified in relevent .s3 file
+    help    print this message and exit
     link [accountName bucketName]
-                          If accountName and bucketName are not specified, display contents of .s3 file in current directory or a parent directory.
-                          Otherwise create or modify .s3 file in current directory by setting accountName and bucketName
-    sync                  sync directory tree to specified bucket
-    upload                upload directory tree to bucket specified in relevent .s3 file
+      If accountName and bucketName are not specified, display contents of .s3 file in current directory or a parent directory.
+      Otherwise create or modify .s3 file in current directory by setting accountName and bucketName
+    sync    sync directory tree to specified bucket
+    upload, up  upload entire directory tree to bucket specified in relevent .s3 file
 ````
 
 The `upload` and `sync` commands continue uploading changed files until you press Control-C or Command-C
