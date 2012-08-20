@@ -42,7 +42,7 @@ public class Uploader extends DirectoryWalker<File> {
             Model.s3ObjectDataFetched = true;
         }
         treeRootStrLen = treeRoot.getCanonicalPath().length();
-        ArrayList<File> results = new ArrayList<File>();
+        ArrayList<File> results = new ArrayList<>();
         walk(treeRoot, results);
         if (multithreadingEnabled) {
             final Future<Iterable<PutObjectResult>> future = Futures.sequence(futures, dispatcher);

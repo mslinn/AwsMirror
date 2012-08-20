@@ -9,6 +9,9 @@ import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.StringInputStream;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.FileTime;
 import java.util.Date;
 import java.util.LinkedList;
 
@@ -116,10 +119,12 @@ public class S3 {
     }
 
     /** Uploads a file to the specified bucket. The file's last-modified date is applied to the uploaded file.
-     * If the key has leading slashes, they are removed for consistency. */
+     * If the key has leading slashes, they are removed for consistency.
+     * List last modified date in bash with: ls -lc --time-style=full-iso */
     public PutObjectResult uploadFile(String bucketName, String key, File file) {
         ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setLastModified(new Date(file.lastModified()));
+        metadata.setLastModified(new Date(file.lastModified())); // ignored by S3
+//        System.out.println("File.lastModified=" + file.lastModified() + "metadata.lastModified=" + metadata.getLastModified().getTime());
         metadata.setContentEncoding("utf-8");
         // content length is set by s3.putObject()
         setContentType(key, metadata);
@@ -141,6 +146,12 @@ public class S3 {
                 }
             });
             PutObjectResult result = s3.putObject(putObjectRequest);
+
+            // compensate for AWS S3 not storing last modified time properly
+            ObjectMetadata m2 = s3.getObjectMetadata(bucketName, key);
+            long time = m2.getLastModified().getTime();
+            //System.out.println("m2 time=" + m2.getLastModified());
+            Files.getFileAttributeView(file.toPath(), BasicFileAttributeView.class).setTimes(FileTime.fromMillis(time), null, FileTime.fromMillis(time));
             return result;
         } catch (Exception e) {
             System.err.println(e.getMessage());
