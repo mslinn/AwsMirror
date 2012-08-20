@@ -39,9 +39,16 @@ object Util {
     if (values.length==0)
       return ""
 
+    if (values.length==1)
+      return "1 value: " + values(0) + " ms";
+
+    val millisMean = arithmeticMean(values: _*).asInstanceOf[Long]
+
+    if (values.length<5)
+      return "%s mean of %d values: %d ms".format(label, values.length, millisMean)
+
     // std deviation is +/- so subtract from mean and double it to show uncertainty range
     // midpoint of uncertainty is therefore the mean
-    val millisMean = arithmeticMean(values: _*).asInstanceOf[Long]
     val stdDev = popStdDev(values: _*).asInstanceOf[Long]
     val result = "%s mean of %d values: %d ms, +/- %d ms (1 std dev: from %d ms to %d ms, 2 std devs: from %d ms to %d ms)".
       format(label, values.length, millisMean, stdDev, millisMean - stdDev, millisMean + stdDev, millisMean - 2*stdDev, millisMean + 2*stdDev)

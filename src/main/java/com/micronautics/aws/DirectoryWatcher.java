@@ -36,10 +36,10 @@ public class DirectoryWatcher {
     private final Timer timer = new Timer();
 
     /** Time by which all file operations should have settled */
-    protected long debounceTime = 10 * 1000L; // todo make this configurable
+    protected long debounceTime = 5 * 1000L; // todo make this configurable
 
     /** Milliseconds between checks for debounced file events */
-    protected long debounceCheckInterval = 250; // todo make this configurable
+    protected long debounceCheckInterval = debounceTime / 5L; // todo make this configurable
 
     protected HistoryMap historyMap = new HistoryMap();
 
