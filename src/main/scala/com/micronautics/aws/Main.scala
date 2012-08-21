@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import java.nio.file.Files
+import org.apache.commons.lang.SystemUtils.IS_OS_WINDOWS
+import org.slf4j.Logger.ROOT_LOGGER_NAME
 
 object Main extends App {
   lazy val system = ActorSystem()
@@ -40,7 +42,7 @@ object Main extends App {
     process(args.toList)
   }
 
-  private lazy val logger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger]
+  private lazy val logger = LoggerFactory.getLogger(ROOT_LOGGER_NAME).asInstanceOf[Logger]
   private lazy val logLevels = Vector[Level](Level.ERROR, Level.WARN, Level.INFO, Level.DEBUG)
   private var levelWasSet = false
   private var multithreadingWasSet = false
@@ -290,7 +292,7 @@ object Main extends App {
   }
 
   def makeFileHiddenIfDos(path: Path) {
-    if (org.apache.commons.lang.SystemUtils.IS_OS_WINDOWS) {
+    if (IS_OS_WINDOWS) {
       path.fileOption match {
         case Some(file) =>
           if (!file.isHidden)

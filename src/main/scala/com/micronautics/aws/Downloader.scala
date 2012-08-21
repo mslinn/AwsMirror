@@ -24,6 +24,9 @@ import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+import java.nio.file.attribute.{BasicFileAttributeView, FileTime}
+import java.nio.file.Files
+import org.apache.commons.lang.SystemUtils._
 
 /** Downloads on multiple threads if Model.multithreadingEnabled is true */
 class Downloader(overwrite: Boolean) {
@@ -119,9 +122,13 @@ class Downloader(overwrite: Boolean) {
         println(e.getMessage)
         return
     }
-    outFile.setLastModified(node.getLastModified().getTime) // some OSes only support resolution to the nearest second
-    logger.info("Downloaded '%s' (last modified %s, %d bytes).".
-      format(relativeFileName(localDir, outFile), dtFmt(node.getLastModified), outFile.length()))
+    // some OSes only support resolution to the nearest second
+    val fileAttributeView = Files.getFileAttributeView(outFile.toPath, classOf[BasicFileAttributeView])
+    val time: FileTime = FileTime.fromMillis(node.getLastModified.getTime)
+    fileAttributeView.setTimes(time, null, if (IS_OS_WINDOWS) time else time) // last param was null, which might be ok
+    logger.info("Downloaded '%s' (node last modified %s, file last modified %s, file created %s, %d bytes).".
+      format(relativeFileName(localDir, outFile), dtFmt(node.getLastModified), dtFmt(outFile.lastModified),
+        dtFmt(fileAttributeView.readAttributes().creationTime().toMillis), outFile.length()))
     if (node.getSize!=outFile.length())
       logger.error("Error: %s has different length (%d) than remote version (%d).".
         format(outFile.getAbsolutePath, node.getSize))

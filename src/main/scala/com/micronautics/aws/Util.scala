@@ -3,12 +3,13 @@ package com.micronautics.aws
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import java.io.File
 import java.util.Date
-import scala.collection.JavaConversions._
 import Model._
 import java.text.SimpleDateFormat
 import grizzled.math.stats._
 import java.util.ArrayList
 import scala.collection.JavaConversions._
+import java.nio.file.attribute.{BasicFileAttributeView, FileTime}
+import java.nio.file.Files
 
 /**
  * @author Mike Slinn */
@@ -18,6 +19,13 @@ object Util {
   def dtFmt(time: Long): String = dateFormat.format(new Date(time)).trim
 
   def dtFmt(date: Date): String = dateFormat.format(date).trim
+
+  def latestFileTime(file: File): Long = {
+    val fileAttributeView = Files.getFileAttributeView(file.toPath, classOf[BasicFileAttributeView])
+    val creationTime = fileAttributeView.readAttributes().creationTime().toMillis
+    val lastModifiedTime = fileAttributeView.readAttributes().lastModifiedTime().toMillis
+    math.max(creationTime, lastModifiedTime)
+  }
 
   /** Type erasure means that Java interop does not allow the parameters to be specified as ArrayList[Long] */
   def computeStats(modificationTimes: ArrayList[_], deletionTimes: ArrayList[_]): String = {
@@ -50,8 +58,8 @@ object Util {
     // std deviation is +/- so subtract from mean and double it to show uncertainty range
     // midpoint of uncertainty is therefore the mean
     val stdDev = popStdDev(values: _*).asInstanceOf[Long]
-    val result = "%s mean of %d values: %d ms, +/- %d ms (1 std dev: from %d ms to %d ms, 2 std devs: from %d ms to %d ms)".
-      format(label, values.length, millisMean, stdDev, millisMean - stdDev, millisMean + stdDev, millisMean - 2*stdDev, millisMean + 2*stdDev)
+    val result = "%s mean of %d values: %d ms, +/- %d ms (1 std dev: %d ms, 2 std devs: %d ms)".
+      format(label, values.length, millisMean, stdDev, millisMean + stdDev, millisMean + 2*stdDev)
     return result
   }
 
@@ -69,11 +77,11 @@ object Util {
 
     // Some OSes only truncate lastModified time to the nearest second, so truncate both times to nearest second
     val s3NodeLastModified: Long = node.getLastModified.getTime / 1000L
-    val fileLastModified: Long = (file.lastModified + 500L) / 1000L // round to nearest second
-    //println("s3NodeLastModified=" + s3NodeLastModified + "; fileLastModified=" + fileLastModified)
-    val result: Int = if (s3NodeLastModified == fileLastModified)
+    val fileTime: Long = (latestFileTime(file) + 500L) / 1000L // round to nearest second
+    //println("s3NodeLastModified=" + s3NodeLastModified + "; lastestFileTime=" + fileLastModified)
+    val result: Int = if (s3NodeLastModified == fileTime)
         s3FileSameAgeAsLocal
-      else if (s3NodeLastModified < fileLastModified)
+      else if (s3NodeLastModified < fileTime)
         s3FileIsOlderThanLocal
       else
         s3FileNewerThanLocal

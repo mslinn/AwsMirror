@@ -40,9 +40,7 @@ public class DirectoryWatcher {
 
     /** Milliseconds between checks for debounced file events */
     protected long debounceCheckInterval = debounceTime / 5L; // todo make this configurable
-
     protected HistoryMap historyMap = new HistoryMap();
-
     protected DebounceQueue debounceQueue = new DebounceQueue();
     protected QueueTask queueTask = new QueueTask();
 
@@ -66,7 +64,7 @@ public class DirectoryWatcher {
     protected static boolean ignore(File file) {
         for (Pattern pattern : Model.ignoredPatterns)
             if (pattern.matcher(file.getName()).matches()) {
-                System.out.println("DirectoryWatcher ignoring " + file.getName());
+                System.out.println("Ignoring " + file.getName());
                 return true;
             }
         return false;

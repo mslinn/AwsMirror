@@ -15,23 +15,20 @@ import java.nio.file.attribute.FileTime;
 import java.util.Date;
 import java.util.LinkedList;
 
+import static com.micronautics.aws.Util.latestFileTime;
+import static org.apache.commons.lang.SystemUtils.IS_OS_WINDOWS;
+
 /**
- * When uploading, a key does not start with a slash, one is added for consistency with how web clients fetch assets
- * <pre>GET /robots.txt
- * GET /flex/portfolio/healthCare.jsp
- * GET /StyleSheet.css
- * GET /</pre>
- * Similarly, if a non-empty prefix is specified, a slash is also added. This means that all assets uploaded with this
- * program have leading slashes.
+ * When uploading, any leading slashes for keys are removed because when AWS S3 is enabled for a web site, S3 adds a leading slash.
  *
- * When downloading, keys are returned with leading dots to be compatible with file systems.
- * For example:
- * <tt></tt>/</tt> translates to <tt>./</tt>
- * <tt></tt>/healthCare.jsp</tt> translates to <tt>./healthCare.jsp</tt>
- * <tt></tt>/flex/portfolio/healthCare.jsp</tt> translates to <tt>./flex/portfolio/healthCare.jsp</tt>
- *
- * Keys of assets that were uploaded by other clients might not start with leading slashes; those assets can
+ * Keys of assets that were uploaded by other clients might start with leading slashes, or a dit; those assets can
  * not be fetched by web browsers.
+ *
+ * AWS does not respect the last-modified metadata provided when uploading; it uses the upload timestamp instead.
+ * After uploading, the last-modified timestamp of the uploaded file is read and applied to the local copy of the file
+ * so the timestamps match.
+ *
+ * Java on Windows does not handle last-modified properly, so the creation date is set to the last-modified date for files (Windows only).
  */
 public class S3 {
     private AmazonS3Client s3;
@@ -119,12 +116,21 @@ public class S3 {
     }
 
     /** Uploads a file to the specified bucket. The file's last-modified date is applied to the uploaded file.
+     * AWS does not respect the last-modified metadata, and Java on Windows does not handle last-modified properly either.
      * If the key has leading slashes, they are removed for consistency.
-     * List last modified date in bash with: ls -lc --time-style=full-iso */
+     *
+     * AWS does not respect the last-modified metadata provided when uploading; it uses the upload timestamp instead.
+     * After uploading, the last-modified timestamp of the uploaded file is read and applied to the local copy of the file
+     * so the timestamps match.
+     *
+     * Java on Windows does not handle last-modified properly, so the creation date is set to the last-modified date (Windows only).
+     *
+     * To list the last modified date with seconds in bash with: <code>ls -lc --time-style=full-iso</code>
+     * To list the creation date with seconds in bash with: <code>ls -l --time-style=full-iso</code> */
     public PutObjectResult uploadFile(String bucketName, String key, File file) {
         ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setLastModified(new Date(file.lastModified())); // ignored by S3
-//        System.out.println("File.lastModified=" + file.lastModified() + "metadata.lastModified=" + metadata.getLastModified().getTime());
+        metadata.setLastModified(new Date(latestFileTime(file))); // ignored by S3
+//        System.out.println("File latest time=" + lastestFileTime(file) + "metadata.lastModified=" + metadata.getLastModified().getTime());
         metadata.setContentEncoding("utf-8");
         // content length is set by s3.putObject()
         setContentType(key, metadata);
@@ -149,9 +155,10 @@ public class S3 {
 
             // compensate for AWS S3 not storing last modified time properly
             ObjectMetadata m2 = s3.getObjectMetadata(bucketName, key);
-            long time = m2.getLastModified().getTime();
+            FileTime time = FileTime.fromMillis(m2.getLastModified().getTime());
             //System.out.println("m2 time=" + m2.getLastModified());
-            Files.getFileAttributeView(file.toPath(), BasicFileAttributeView.class).setTimes(FileTime.fromMillis(time), null, FileTime.fromMillis(time));
+            Files.getFileAttributeView(file.toPath(), BasicFileAttributeView.class)
+                .setTimes(time, null, IS_OS_WINDOWS ? time : time);
             return result;
         } catch (Exception e) {
             System.err.println(e.getMessage());
