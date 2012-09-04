@@ -25,7 +25,7 @@ class Sync(args: Array[String]) {
   private val logger = LoggerFactory.getLogger(getClass)
   if (!credentialPath.exists) {
     println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.path))
-    System.exit(-1)
+    sys.exit(-1)
   }
 
   args.length match {

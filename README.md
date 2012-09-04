@@ -79,7 +79,8 @@ Usage: aws <option> <action>
       If accountName and bucketName are not specified, display contents of .s3 file in current directory or a parent directory.
       Otherwise create or modify .s3 file in current directory by setting accountName and bucketName
     sync    sync directory tree to specified bucket
-    upload, up  upload entire directory tree to bucket specified in relevent .s3 file
+    upload, up   upload to bucket specified in relevent .s3 file; continues monitoring directory tree and uploads changes
+    upload, up (file, directory or entire directory tree)   uploads file or directory and exits
 ````
 
 The `upload` and `sync` commands continue uploading changed files until you press Control-C or Command-C

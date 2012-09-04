@@ -12,15 +12,14 @@
  * License for the specific language governing permissions and limitations under
  * the License. */
 
- package com.micronautics.aws
+package com.micronautics.aws
 
 import com.micronautics.aws.Main._
 import scala.Some
 import java.nio.file.Paths
 import java.io.File
 import Upload._
-import java.util.regex.Pattern
-import collection.JavaConversions._
+import scala.collection.JavaConversions._
 
 object Upload {
   /** Upload entire tree to bucket specified in .s3 file in this directory or parent;
@@ -30,22 +29,20 @@ object Upload {
     findS3File() match {
       case None =>
         println("Error: This directory is not linked with an AWS S3 bucket.\nUse the link subcommand to establish the link.")
-        System.exit(0)
-        null
+        sys.exit(0)
 
       case Some(s3File) =>
         val s3FileObject = parseS3File(s3File) //parse[S3File](Path(file).slurpString(Codec.UTF8))
         getAuthentication(s3FileObject.accountName) match {
           case None =>
             println("Error: %s was not found".format(s3File.getCanonicalPath))
-            System.exit(-1)
-            null
+            sys.exit(-1)
 
           case Some(credentials) =>
             val s3 = new S3(credentials.accessKey, credentials.secretKey)
             if (!s3.listBuckets().contains(s3FileObject.bucketName)) {
               println("Error: AWS account %s does not define bucket %s".format(s3FileObject.accountName, s3FileObject.bucketName))
-              System.exit(-1)
+              sys.exit(-1)
             }
             (credentials, s3FileObject, s3File)
         }
@@ -68,7 +65,7 @@ object Upload {
 class Upload(args: Array[String]) {
   if (!credentialPath.exists) {
     println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.path))
-    System.exit(-1)
+    sys.exit(-1)
   }
 
   args.length match {
@@ -79,6 +76,27 @@ class Upload(args: Array[String]) {
       Model.credentials = credentials
       Model.s3 = s3fileObject.get
       upload(s3File)
+
+    case 1 => // does not upload continuously after finishing
+      val (credentials, s3fileObject, s3File) = retrieveParams
+      Model.bucketName = s3fileObject.bucketName
+      Model.ignoredPatterns = s3fileObject.ignoredPatterns
+      Model.credentials = credentials
+      Model.s3 = s3fileObject.get
+      val s3DirFile = new File(args(0))
+      if (s3DirFile.exists()) {
+        if (s3DirFile.isDirectory) {
+          new Uploader(true).upload(s3DirFile)
+        } else {
+          val s3DirPath = s3DirFile.toPath
+          val key = if (s3DirPath.isAbsolute) s3File.toPath.relativize(s3DirFile.toPath).toString else s3DirPath.toString
+          new UploadOne(key, s3DirFile).call()
+          println()
+        }
+      } else {
+        println(s3DirFile.getAbsolutePath + " does not exist.")
+        sys.exit(-1)
+      }
 
     case _ =>
       println("Error: Too many arguments provided for upload")

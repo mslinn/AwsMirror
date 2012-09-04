@@ -161,10 +161,11 @@ object Main extends App {
         |    link [accountName bucketName]
         |      If accountName and bucketName are not specified, display contents of .s3 file in current directory or a parent directory.
         |      Otherwise create or modify .s3 file in current directory by setting accountName and bucketName
-        |    sync    sync directory tree to specified bucket
-        |    upload, up  upload entire directory tree to bucket specified in relevent .s3 file
-      """.stripMargin)
-    System.exit(0)
+        |    sync    sync directory tree to specified bucket; continues monitoring directory tree and uploads changes
+        |    upload, up   upload to bucket specified in relevent .s3 file; continues monitoring directory tree and uploads changes
+        |    upload, up (file, directory or entire directory tree)   uploads file or directory and exits
+        |      """.stripMargin)
+    sys.exit(0)
   }
 
   /** @return true if bucket exists for given or implicit AWS S3 account credentials */

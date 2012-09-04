@@ -20,7 +20,7 @@ import scala.Some
 class Download(args: Array[String]) {
   if (!credentialPath.exists) {
     println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.path))
-    System.exit(-1)
+    sys.exit(-1)
   }
 
   args.length match {
@@ -36,13 +36,13 @@ class Download(args: Array[String]) {
           getAuthentication(s3File.accountName) match {
             case None =>
               println("Error: %s was not found".format(file.getCanonicalPath))
-              System.exit(-1)
+              sys.exit(-1)
 
             case Some(credentials) =>
               val s3 = new S3(credentials.accessKey, credentials.secretKey)
               if (!s3.listBuckets().contains(s3File.bucketName)) {
                 println("Error: AWS account %s does not define bucket %s".format(s3File.accountName, s3File.bucketName))
-                System.exit(-1)
+                sys.exit(-1)
               }
               Model.credentials = credentials
               Model.bucketName = s3File.bucketName

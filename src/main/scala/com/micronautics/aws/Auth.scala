@@ -101,13 +101,13 @@ class Auth(args: Array[String]) {
     credentialFileContents match {
       case None =>
         println(".aws file not found in %s".format(credentialPath.path))
-        System.exit(-1)
+        sys.exit(-1)
 
       case Some(contents) =>
         val oldCredentials = AllCredentials(parse[Array[Credentials]](contents))
         if (!oldCredentials.defines(accountName)) {
           println("Error: authorization information for AWS account '%s' is not present in %s".format(accountName, credentialPath.path))
-          System.exit(-1)
+          sys.exit(-1)
         }
         val newCredentials = oldCredentials.flatMap {
           cred =>
