@@ -1,9 +1,10 @@
-import com.amazonaws.services.s3.model.AmazonS3Exception
-import com.amazonaws.services.s3.model.S3ObjectSummary
-import com.micronautics.aws.Main
-import com.micronautics.aws.S3
+import com.amazonaws.services.s3.model._
+import com.amazonaws.util.Md5Utils
+import com.micronautics.aws._
 import com.micronautics.aws.S3File
-import java.io.File
+import java.io.{FileInputStream, File}
+import java.nio.file.attribute.BasicFileAttributeView
+import java.nio.file.Files
 import java.util.Date
 import com.micronautics.aws.S3.relativize
 import org.apache.commons.io.FileUtils
@@ -14,6 +15,7 @@ import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.util.EntityUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfter, WordSpec}
 import org.scalatest.matchers.MustMatchers
+import scala.Some
 
 /**These tests will fail unless a file called AwsCredentials.properties is created in src/test/resources. */
 class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeAndAfterAll {
@@ -27,6 +29,7 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
 
   val s3: S3 = creds match {
     case Some(credentials) =>
+      Model.credentials = credentials
       new S3(credentials.accessKey, credentials.secretKey)
 
     case None =>
@@ -74,7 +77,6 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
 
     "download" in {
       s3.uploadFile(bucketName, file1Name, file1)
-
       assert(null != s3File, ".s3 file not found")
 
 //      println(s3File.endpointUrl)
@@ -89,6 +91,79 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
       FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, "/" + file1Name), file2)
       assert(file2.exists, "Ensure downloaded file can be found")
       assert(file2.length === file1.length, "Ensure downloaded file is complete")
+    }
+  }
+
+  "Downloader" must {
+    "download the time stamps properly" in {
+      println(file1.getName + " last modified before upload " + new Date(file1.lastModified))
+      s3.uploadFile(bucketName, file1Name, file1)
+      Thread.sleep(2000) // account for time stamp rounding
+      val downloader = new Downloader(true)
+      val localDir = new File (".")
+
+      val node = new S3ObjectSummary()
+      node.setBucketName(bucketName)
+      node.setKey("index.html")
+
+      val file = new File("index.html")
+      downloader.downloadOne(localDir, node, file)
+      val lastModified = file.lastModified
+      val fileAttributeView = Files.getFileAttributeView(file.toPath, classOf[BasicFileAttributeView])
+      val fileTime = fileAttributeView.readAttributes.creationTime.toMillis
+      val objectData = s3.getOneObjectData(bucketName, node.getKey)
+      println(objectData.getKey + " last modified after upload " + objectData.getLastModified)
+      assert(lastModified == objectData.getLastModified.getTime, "lastModified matches")
+      assert(fileTime == objectData.getLastModified.getTime, "fileTime matches")
+    }
+  }
+
+  /**
+   * The lastModified field in the metadata for the uploaded file is not used, as we can see from the output:
+   * File lastModified (seconds)=1346800736
+   * index.html last modified (seconds) after upload 1346802042
+   * I think this is a bug. It plays havoc with syncing a directory tree against a previously uploaded version of the tree.
+   * It would be better if there was a way to fetch the hash of the S3 file contents and compare it to the hash for the local copy. */
+  "Minimal uploader" must {
+    "set the time stamp properly" in {
+      val key = "index.html"
+      val file = new File(key)
+      val metadata = new ObjectMetadata
+      metadata.setLastModified(new Date(file.lastModified()))
+      println("File lastModified (seconds)=" + file.lastModified / 1000)
+      val putObjectRequest: PutObjectRequest = new PutObjectRequest(bucketName, key, file)
+      putObjectRequest.setMetadata(metadata)
+      val result: PutObjectResult = s3.s3.putObject(putObjectRequest)
+      val objectData = s3.getOneObjectData(bucketName, key)
+      println(objectData.getKey + " last modified (seconds) after upload " + objectData.getLastModified.getTime / 1000)
+
+      val fileContents: String = FileUtils.readFileToString(file)
+      println("File hashCode=" + fileContents.hashCode)
+      println("Uploaded hashcode=" + objectData.hashCode)
+    }
+  }
+
+  "Uploader" must {
+    "upload the time stamps properly" in {
+      s3.uploadFile(bucketName, file1Name, file1)
+      println(file1.getName + " last modified before upload " + file1.lastModified())
+      Thread.sleep(2000) // account for time stamp rounding
+      val downloader = new Downloader(true)
+      val localDir = new File (".")
+
+      val node = new S3ObjectSummary()
+      node.setBucketName(bucketName)
+      node.setKey("index.html")
+
+      val file = new File("index.html")
+      downloader.downloadOne(localDir, node, file)
+      val lastModified = file.lastModified()
+      val fileAttributeView = Files.getFileAttributeView(file.toPath, classOf[BasicFileAttributeView])
+      val fileTime = fileAttributeView.readAttributes().creationTime().toMillis
+      val objectData = s3.getOneObjectData(bucketName, node.getKey)
+      assert(lastModified == objectData.getLastModified.getTime, "lastModified matches")
+      assert(fileTime == objectData.getLastModified.getTime, "fileTime matches")
+      println(file1.getName + " last modified after upload " + file1.lastModified())
     }
   }
 

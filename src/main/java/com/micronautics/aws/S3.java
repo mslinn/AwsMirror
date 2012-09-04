@@ -31,7 +31,7 @@ import static org.apache.commons.lang.SystemUtils.IS_OS_WINDOWS;
  * Java on Windows does not handle last-modified properly, so the creation date is set to the last-modified date for files (Windows only).
  */
 public class S3 {
-    private AmazonS3Client s3;
+    public AmazonS3Client s3;
     public Exception exception;
     public AWSCredentials awsCredentials;
 
