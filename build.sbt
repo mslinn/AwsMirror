@@ -4,9 +4,9 @@ seq(ProguardPlugin.proguardSettings :_*)
 
 proguardOptions += keepMain("Main")
 
-organization := "Micronautics Research"
+organization := "com.micronautics"
 
-name := "awsMirror"
+name := "AwsMirror"
 
 version := "0.1.0-SNAPSHOT"
 
