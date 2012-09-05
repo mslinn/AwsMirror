@@ -6,7 +6,9 @@ proguardOptions += keepMain("Main")
 
 organization := "com.micronautics"
 
-name := "AwsMirror"
+name := "awsmirror"
+
+crossPaths := false
 
 version := "0.1.0-SNAPSHOT"
 
