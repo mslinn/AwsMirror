@@ -147,15 +147,15 @@ object Downloader {
         format(file.getAbsolutePath, dtFmt(file.lastModified), dtFmt(node.getLastModified)))
   }
 
-  def relativeFileName(base: File, file: File): String = {
-    val basePath = base.getAbsolutePath
-    val path = file.getAbsolutePath
-    path.substring(basePath.length+1)
-  }
-
   def fileNamePrefix(base: File, file: File): String = {
     val basePath = base.getAbsolutePath
     val path = file.getAbsolutePath
     path.substring(0, basePath.length)
+  }
+
+  def relativeFileName(base: File, file: File): String = {
+    val basePath = base.getAbsolutePath
+    val path = file.getAbsolutePath
+    path.substring(basePath.length+1)
   }
 }
