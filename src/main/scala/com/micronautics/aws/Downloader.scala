@@ -14,6 +14,7 @@
 
 package com.micronautics.aws
 
+import Downloader._
 import Model._
 import Util._
 import akka.dispatch.{ ExecutionContext, Future }
@@ -21,7 +22,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary
 import java.io.{ IOException, File }
 import java.util.ArrayList
 import org.apache.commons.io.FileUtils
-import org.slf4j.LoggerFactory
+import org.slf4j.{ LoggerFactory, Logger }
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import java.nio.file.attribute.{BasicFileAttributeView, FileTime}
@@ -102,6 +103,50 @@ class Downloader(overwrite: Boolean) {
     results
   }
 
+  def downloadOne(localDir: File, node: S3ObjectSummary, outFile: File): Unit = {
+    try {
+      FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
+    } catch {
+      case e =>
+        println(e.getMessage)
+        return
+    }
+    changeFileTime(outFile, node, localDir, logger)
+  }
+
+  def deleteBadKeys: Unit = {
+    val allNodes = s3.getAllObjectData(bucketName, "") // get every object
+    allNodes foreach { node: S3ObjectSummary =>
+      val nodeKey = node.getKey()
+      if (!nodeKey.startsWith("/"))
+        s3.deleteObject(bucketName, nodeKey)
+    }
+  }
+}
+
+object Downloader {
+  /**
+    * Change file's lastModified date to match node's last modified time; also modified creation time if running under Windows
+    * @param file local File to modify
+    * @param node S3ObjectSummary of S3 version of file
+    * @param localDir base directory (File) containing .s3 file
+    */
+  def changeFileTime(file: File, node: S3ObjectSummary, localDir: File, logger: Logger) {
+    // some OSes only support resolution to the nearest second
+    val fileAttributeView = Files.getFileAttributeView(file.toPath, classOf[BasicFileAttributeView])
+    val time: FileTime = FileTime.fromMillis(node.getLastModified.getTime)
+    fileAttributeView.setTimes(time, null, if (IS_OS_WINDOWS) time else time) // last param was null, which might be ok
+    logger.info("Downloaded '%s' (node last modified %s, file last modified %s, file created %s, %d bytes).".
+      format(relativeFileName(localDir, file), dtFmt(node.getLastModified), dtFmt(file.lastModified),
+      dtFmt(fileAttributeView.readAttributes().creationTime().toMillis), file.length()))
+    if (node.getSize != file.length())
+      logger.error("Error: %s has different length (%d) than remote version (%d).".
+        format(file.getAbsolutePath, node.getSize))
+    if (node.getLastModified.getTime != file.lastModified())
+      logger.error("Error: %s has last modified date (%s), which differs from remote version (%s).".
+        format(file.getAbsolutePath, dtFmt(file.lastModified), dtFmt(node.getLastModified)))
+  }
+
   def relativeFileName(base: File, file: File): String = {
     val basePath = base.getAbsolutePath
     val path = file.getAbsolutePath
@@ -112,37 +157,5 @@ class Downloader(overwrite: Boolean) {
     val basePath = base.getAbsolutePath
     val path = file.getAbsolutePath
     path.substring(0, basePath.length)
-  }
-
-  def downloadOne(localDir: File, node: S3ObjectSummary, outFile: File): Unit = {
-    try {
-      FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
-    } catch {
-      case e =>
-        println(e.getMessage)
-        return
-    }
-    // some OSes only support resolution to the nearest second
-    val fileAttributeView = Files.getFileAttributeView(outFile.toPath, classOf[BasicFileAttributeView])
-    val time: FileTime = FileTime.fromMillis(node.getLastModified.getTime)
-    fileAttributeView.setTimes(time, null, if (IS_OS_WINDOWS) time else time) // last param was null, which might be ok
-    logger.info("Downloaded '%s' (node last modified %s, file last modified %s, file created %s, %d bytes).".
-      format(relativeFileName(localDir, outFile), dtFmt(node.getLastModified), dtFmt(outFile.lastModified),
-        dtFmt(fileAttributeView.readAttributes().creationTime().toMillis), outFile.length()))
-    if (node.getSize!=outFile.length())
-      logger.error("Error: %s has different length (%d) than remote version (%d).".
-        format(outFile.getAbsolutePath, node.getSize))
-    if (node.getLastModified.getTime!=outFile.lastModified())
-      logger.error("Error: %s has last modified date (%s), which differs from remote version (%s).".
-        format(outFile.getAbsolutePath, dtFmt(outFile.lastModified), dtFmt(node.getLastModified)))
-  }
-
-  def deleteBadKeys: Unit = {
-    val allNodes = s3.getAllObjectData(bucketName, "") // get every object
-    allNodes foreach { node: S3ObjectSummary =>
-      val nodeKey = node.getKey()
-      if (!nodeKey.startsWith("/"))
-        s3.deleteObject(bucketName, nodeKey)
-    }
   }
 }

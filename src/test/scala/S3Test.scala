@@ -130,12 +130,12 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
       val file = new File(key)
       val metadata = new ObjectMetadata
       metadata.setLastModified(new Date(file.lastModified()))
-      println("File lastModified (seconds)=" + file.lastModified / 1000)
+      println("File lastModified (seconds)=" + new Date(file.lastModified) + "; " + file.lastModified / 1000)
       val putObjectRequest: PutObjectRequest = new PutObjectRequest(bucketName, key, file)
       putObjectRequest.setMetadata(metadata)
       val result: PutObjectResult = s3.s3.putObject(putObjectRequest)
       val objectData = s3.getOneObjectData(bucketName, key)
-      println(objectData.getKey + " last modified (seconds) after upload " + objectData.getLastModified.getTime / 1000)
+      println(objectData.getKey + " last modified (seconds) after upload " + objectData.getLastModified + "; " + objectData.getLastModified.getTime / 1000)
 
       val fileContents: String = FileUtils.readFileToString(file)
       println("File hashCode=" + fileContents.hashCode)
