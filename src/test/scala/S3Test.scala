@@ -50,8 +50,8 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
 
   "Bucket names" must {
     "not contain invalid characters" in {
-      val bnSanitized: String = "Blah ick! ro!x@3".toLowerCase.replaceAll("\\W", "")
-      assert(bnSanitized==="blahickrox3", "Invalid characters removed")
+      val bnSanitized: String = "Blah ick! ro!x@3.".toLowerCase.replaceAll("[^A-Za-z0-9.]", "")
+      assert(bnSanitized==="blahickrox3.", "Invalid characters removed")
     }
   }
 

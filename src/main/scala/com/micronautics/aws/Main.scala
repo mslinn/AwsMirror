@@ -137,7 +137,8 @@ object Main extends App {
 
   def help: Unit = {
     println(
-      """Usage: aws <option> <action>
+      """AwsMirror v0.1.0-SNAPSHOT
+        |Usage: aws <option> <action>
         |  Where <option> is one of:
         |      -m    multithreading enabled
         |      -M    multithreading disabled
