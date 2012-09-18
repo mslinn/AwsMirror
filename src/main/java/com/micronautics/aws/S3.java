@@ -87,10 +87,23 @@ public class S3 {
      * taken by any user, you can't create another bucket with that same repoName.
      * You can optionally specify a location for your bucket if you want to keep your data closer to your applications or users. */
     public Bucket createBucket(String bucketName) {
-        Bucket bucket = s3.createBucket(bucketName);
-        s3.setBucketPolicy(bucketName, bucketPolicy(bucketName));
-        if (bucketName.startsWith("www."))
-           enableWebsite(bucketName);
+        String bnSanitized = bucketName.toLowerCase().replaceAll("\\W", ""); // remove non-alpha chars
+        if (bucketName.compareTo(bnSanitized)!=0) {
+            System.out.println("Invalid characters removed from bucket name; modified to " + bnSanitized);
+            System.out.println("Press any key to continue, Control-C to stop.");
+            InputStreamReader isr = new InputStreamReader(System.in);
+            BufferedReader br = new BufferedReader(isr);
+            try {
+                br.readLine();
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+                System.exit(-1);
+            }
+        }
+        Bucket bucket = s3.createBucket(bnSanitized);
+        s3.setBucketPolicy(bnSanitized, bucketPolicy(bnSanitized));
+        if (bnSanitized.startsWith("www."))
+           enableWebsite(bnSanitized);
         return bucket;
     }
 
