@@ -31,7 +31,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "ch.qos.logback"                %  "logback-classic"     % "1.0.6"  withSources(),
-  "com.amazonaws"                 %  "aws-java-sdk"        % "1.3.20" withSources(),
+  "com.amazonaws"                 %  "aws-java-sdk"        % "1.3.21" withSources(),
   "com.thoughtworks.paranamer"    %  "paranamer"           % "2.5"    withSources(),
   "commons-io"                    %  "commons-io"          % "2.4"    withSources(),
   "commons-httpclient"            %  "commons-httpclient"  % "3.1"    % "test" withSources(),
