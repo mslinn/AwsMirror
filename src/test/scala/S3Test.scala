@@ -1,3 +1,4 @@
+import com.amazonaws.auth.policy.Principal
 import com.amazonaws.services.s3.model._
 import com.amazonaws.util.Md5Utils
 import com.micronautics.aws._
@@ -52,6 +53,24 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
     "not contain invalid characters" in {
       val bnSanitized: String = "Blah ick! ro!x@3.".toLowerCase.replaceAll("[^A-Za-z0-9.]", "")
       assert(bnSanitized==="blahickrox3.", "Invalid characters removed")
+    }
+
+    "not duplicate existing bucket names" in {
+      assert(s3.bucketExists(bucketName), "Bucket should exists")
+    }
+  }
+
+  "ACLs" must {
+    "provide access to authorized people" in {
+      val getBucketAclRequest = new GetBucketAclRequest(bucketName)
+      println(getBucketAclRequest)
+
+      val principal = new Principal("3be599c1fa2d0ef24de229ad27adb107f736a79727ef8753fba31ff7db10e2ee")
+      val accessControlList = new AccessControlList()
+      val grantee = new CanonicalGrantee("mslinn@mslinn.com")
+      accessControlList.grantPermission(grantee, Permission.FullControl)
+      val setBucketAclRequest = new SetBucketAclRequest(bucketName, accessControlList)
+      println(setBucketAclRequest)
     }
   }
 

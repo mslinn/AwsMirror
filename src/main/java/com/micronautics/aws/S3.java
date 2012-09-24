@@ -14,6 +14,7 @@ import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.FileTime;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
 
 import static com.micronautics.aws.Util.latestFileTime;
 import static org.apache.commons.lang.SystemUtils.IS_OS_WINDOWS;
@@ -100,11 +101,27 @@ public class S3 {
                 System.exit(-1);
             }
         }
+        if (bucketExists(bnSanitized)) {
+            System.err.println("Bucket '" + bnSanitized + "' exists, aborting.");
+            System.exit(-2);
+        }
         Bucket bucket = s3.createBucket(bnSanitized);
         s3.setBucketPolicy(bnSanitized, bucketPolicy(bnSanitized));
         if (bnSanitized.startsWith("www."))
            enableWebsite(bnSanitized);
         return bucket;
+    }
+
+    public boolean bucketExists(String bucketName) {
+        List<Bucket> buckets = s3.listBuckets();
+        for (Bucket bucket : buckets)
+          if (bucket.getName().compareTo(bucketName)==0)
+              return true;
+        return false;
+    }
+
+    public boolean isWebsiteEnabled(String bucketName) throws AmazonClientException {
+        return s3.getBucketWebsiteConfiguration(bucketName)!=null;
     }
 
     public void enableWebsite(String bucketName) {
