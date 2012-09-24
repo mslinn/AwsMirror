@@ -27,6 +27,7 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
   val file2 = new File(file2Name)
   val s3File1: S3File = Main.readS3File
   val creds = Main.getAuthentication(s3File1.accountName)
+  var bucket: Bucket = null
 
   val s3: S3 = creds match {
     case Some(credentials) =>
@@ -42,11 +43,12 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
     s3.deleteBucket(bucketName)
     if (file2.exists)
       file2.delete
+    bucket = null
   }
 
   override def beforeAll() {
 //    println("Creating bucket " + bucketName)
-    s3.createBucket(bucketName)
+    bucket = s3.createBucket(bucketName)
   }
 
   "Bucket names" must {
@@ -57,6 +59,12 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
 
     "not duplicate existing bucket names" in {
       assert(s3.bucketExists(bucketName), "Bucket should exists")
+    }
+  }
+
+  "Bucket websites" must {
+    "be queryable" in {
+      s3.isWebsiteEnabled(bucketName)
     }
   }
 

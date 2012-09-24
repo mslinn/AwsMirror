@@ -120,8 +120,12 @@ public class S3 {
         return false;
     }
 
-    public boolean isWebsiteEnabled(String bucketName) throws AmazonClientException {
-        return s3.getBucketWebsiteConfiguration(bucketName)!=null;
+    public boolean isWebsiteEnabled(String bucketName) {
+        try {
+            return s3.getBucketWebsiteConfiguration(bucketName)!=null;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public void enableWebsite(String bucketName) {
