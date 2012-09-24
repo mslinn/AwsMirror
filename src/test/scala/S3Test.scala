@@ -47,7 +47,7 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
   }
 
   override def beforeAll() {
-//    println("Creating bucket " + bucketName)
+    println("Creating bucket " + bucketName)
     bucket = s3.createBucket(bucketName)
   }
 
@@ -64,7 +64,9 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
 
   "Bucket websites" must {
     "be queryable" in {
-      s3.isWebsiteEnabled(bucketName)
+      assert(s3.isWebsiteEnabled("www.mslinn.com"))
+      assert(s3.isWebsiteEnabled("www.slinnbooks.com"))
+      assert(!s3.isWebsiteEnabled(bucketName))
     }
   }
 
