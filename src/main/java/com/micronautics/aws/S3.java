@@ -7,6 +7,7 @@ import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.StringInputStream;
+import com.labrie.SSLUtilities;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -57,6 +58,8 @@ public class S3 {
         } catch (Exception ex) {
             exception = ex;
         }
+
+        SSLUtilities.trustAllHttpsCertificates();
     }
 
     public S3(final String key, final String secret) {
