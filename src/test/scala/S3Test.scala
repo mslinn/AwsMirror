@@ -64,6 +64,7 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
 
   "Bucket websites" must {
     "be queryable" in {
+      // These asserts require the system property: -Dcom.amazonaws.sdk.disableCertChecking=true
       assert(s3.isWebsiteEnabled("www.mslinn.com"))
       assert(s3.isWebsiteEnabled("www.slinnbooks.com"))
       assert(!s3.isWebsiteEnabled(bucketName))
