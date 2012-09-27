@@ -14,12 +14,11 @@
 
 package com.micronautics.aws
 
-import com.micronautics.aws.AuthAction._
-import com.codahale.jerkson.Json._
-import scala.Some
+import AuthAction._
 import Main._
+import Util._
+import com.codahale.jerkson.Json._
 import org.slf4j.LoggerFactory
-import collection.mutable
 
 class Auth(args: Array[String]) {
   private val logger = LoggerFactory.getLogger(getClass)
@@ -182,7 +181,7 @@ class Auth(args: Array[String]) {
 
   def listBuckets(accessKey: String, secretKey: String, accountName: String): String = {
     val s3 = new S3(accessKey, secretKey)
-    Main.s3Option = Some(s3)
+    Util.s3Option = Some(s3)
     val buckets = s3.listBuckets()
     if (buckets.length == 0) {
       "Account %s has no buckets".format(accountName)

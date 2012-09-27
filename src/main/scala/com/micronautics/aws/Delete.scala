@@ -14,7 +14,8 @@
 
 package com.micronautics.aws
 
-import com.micronautics.aws.Main._
+import Main._
+import Util._
 
 /** Delete S3 bucket */
 class Delete(args: Array[String]) {

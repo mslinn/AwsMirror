@@ -1,13 +1,12 @@
+package com.micronautics.aws
+
+import S3.relativize
 import com.amazonaws.auth.policy.Principal
 import com.amazonaws.services.s3.model._
-import com.amazonaws.util.Md5Utils
-import com.micronautics.aws._
-import com.micronautics.aws.S3File
-import java.io.{FileInputStream, File}
+import java.io.File
 import java.nio.file.attribute.BasicFileAttributeView
 import java.nio.file.Files
 import java.util.Date
-import com.micronautics.aws.S3.relativize
 import org.apache.commons.io.FileUtils
 import org.apache.http.{ HttpEntity, HttpResponse }
 import org.apache.http.client.methods.HttpGet
@@ -16,7 +15,6 @@ import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.util.EntityUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfter, WordSpec}
 import org.scalatest.matchers.MustMatchers
-import scala.Some
 
 /**These tests will fail unless a file called AwsCredentials.properties is created in src/test/resources. */
 class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeAndAfterAll {
@@ -25,13 +23,13 @@ class S3Test extends WordSpec with MustMatchers with BeforeAndAfter with BeforeA
   val file2Name = "index2.html"
   val file1 = new File(file1Name)
   val file2 = new File(file2Name)
-  val s3File1: S3File = Main.readS3File
-  val creds = Main.getAuthentication(s3File1.accountName)
+  val s3File1: S3File = Util.readS3File
+  val creds = Util.getAuthentication(s3File1.accountName)
   var bucket: Bucket = null
 
   val s3: S3 = creds match {
     case Some(credentials) =>
-      Model.credentials = credentials
+      S3Model.credentials = credentials
       new S3(credentials.accessKey, credentials.secretKey)
 
     case None =>

@@ -14,11 +14,11 @@
 
 package com.micronautics.aws
 
-import com.micronautics.aws.Main._
-import scala.Some
+import Main._
+import Upload._
+import Util._
 import java.nio.file.Paths
 import java.io.File
-import Upload._
 import scala.collection.JavaConversions._
 
 object Upload {
@@ -73,16 +73,16 @@ class Upload(args: Array[String]) {
       val (credentials, s3fileObject, s3File) = retrieveParams
       Model.bucketName = s3fileObject.bucketName
       Model.ignoredPatterns = s3fileObject.ignoredPatterns
-      Model.credentials = credentials
-      Model.s3 = s3fileObject.get
+      S3Model.credentials = credentials
+      S3Model.s3 = s3fileObject.get
       upload(s3File)
 
     case 1 => // does not upload continuously after finishing
       val (credentials, s3fileObject, s3File) = retrieveParams
       Model.bucketName = s3fileObject.bucketName
       Model.ignoredPatterns = s3fileObject.ignoredPatterns
-      Model.credentials = credentials
-      Model.s3 = s3fileObject.get
+      S3Model.credentials = credentials
+      S3Model.s3 = s3fileObject.get
       val s3DirFile = new File(args(0))
       if (s3DirFile.exists()) {
         if (s3DirFile.isDirectory) {

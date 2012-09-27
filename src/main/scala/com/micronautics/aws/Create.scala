@@ -14,8 +14,8 @@
 
 package com.micronautics.aws
 
-import com.micronautics.aws.Main._
-import scala.Some
+import Main._
+import Util._
 
 /** Create a bucket, enabled for a web site with index file index.html */
 class Create(args: Array[String]) {

@@ -16,6 +16,7 @@ package com.micronautics.aws
 
 import Downloader._
 import Model._
+import S3Model._
 import Util._
 import akka.dispatch.{ ExecutionContext, Future }
 import com.amazonaws.services.s3.model.S3ObjectSummary

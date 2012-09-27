@@ -14,7 +14,8 @@
 
 package com.micronautics.aws
 
-import com.micronautics.aws.Main._
+import Main._
+import Util._
 
 class Empty(args: Array[String]) {
   if (!credentialPath.exists) {

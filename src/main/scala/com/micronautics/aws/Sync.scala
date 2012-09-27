@@ -12,10 +12,11 @@
  * License for the specific language governing permissions and limitations under
  * the License. */
 
- package com.micronautics.aws
+package com.micronautics.aws
 
-import com.micronautics.aws.Main._
+import Main._
 import Upload._
+import Util._
 import akka.dispatch.Future
 import org.slf4j.LoggerFactory
 import scala.collection.JavaConversions._
@@ -36,9 +37,9 @@ class Sync(args: Array[String]) {
 
       val (credentials, s3fileObject, s3File) = retrieveParams
       Model.bucketName = s3fileObject.bucketName
-      Model.credentials = credentials
+      S3Model.credentials = credentials
       Model.ignoredPatterns = s3fileObject.ignoredPatterns
-      Model.s3 = s3fileObject.get
+      S3Model.s3 = s3fileObject.get
       new Downloader(false).download(s3File.getParentFile)
       Future(upload(s3File, false))(Main.system.dispatcher)
 

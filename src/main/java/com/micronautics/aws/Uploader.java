@@ -76,7 +76,7 @@ public class Uploader extends DirectoryWalker<File> {
     @Override protected void handleFile(File file, int depth, Collection results) {
         try {
             String path = canonicalPath(file);
-            int comparedAges = compareS3FileAge(file, path);
+            int comparedAges = Main.compareS3FileAge(file, path);
             //System.out.println("overwrite=" + overwrite + "; s3Older=" + s3Older + "; " + file.getAbsolutePath());
             if (ignore(file)) {
                 logger.debug("Uploader ignoring " + path);

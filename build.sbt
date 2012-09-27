@@ -25,26 +25,19 @@ scalacOptions in (Compile, doc) <++= baseDirectory.map {
   )
 }
 
-resolvers ++= Seq(
-  "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases"
-)
+resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases"
+
+resolvers += Resolver.url("sbt-plugin-snapshots",
+  new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-snapshots/"))(Resolver.ivyStylePatterns)
 
 libraryDependencies ++= Seq(
-  "ch.qos.logback"                %  "logback-classic"     % "1.0.6"  withSources(),
-  "com.amazonaws"                 %  "aws-java-sdk"        % "1.3.21" withSources(),
-  "com.thoughtworks.paranamer"    %  "paranamer"           % "2.5"    withSources(),
-  "commons-io"                    %  "commons-io"          % "2.4"    withSources(),
-  "commons-httpclient"            %  "commons-httpclient"  % "3.1"    % "test" withSources(),
-  "commons-lang"                  %  "commons-lang"        % "2.6"    withSources(),
-  "com.codahale"                  %  "jerkson_2.9.1"       % "0.5.0",
-  "com.github.scala-incubator.io" %  "scala-io-core_2.9.1" % "0.4.0"  withSources(),
-  "com.github.scala-incubator.io" %  "scala-io-file_2.9.1" % "0.4.0"  withSources(),
-  "junit"                         %  "junit"               % "4.10"   % "test" withSources(),
-  "org.clapper"                   %% "grizzled-scala"      % "1.0.13" withSources(),
-  "org.scalatest"                 %  "scalatest_2.9.2"     % "1.7.1"  % "test" withSources(),
-  "org.scala-tools.time"          %  "time_2.9.1"          % "0.5",
-  "org.scribe"                    %  "scribe"              % "1.3.1"  withSources(),
-  "org.slf4j"                     %  "slf4j-api"           % "1.6.5"  withSources()
+  "com.micronautics"           %  "awss3"           % "0.1.0-SNAPSHOT" withSources(),
+  "ch.qos.logback"             %  "logback-classic" % "1.0.6"  withSources(),
+  "com.thoughtworks.paranamer" %  "paranamer"       % "2.5"    withSources(),
+  "junit"                      %  "junit"           % "4.10"   % "test" withSources(),
+  "org.scalatest"              %  "scalatest_2.9.2" % "1.7.1"  % "test" withSources(),
+  "org.scribe"                 %  "scribe"          % "1.3.1"  withSources(),
+  "org.slf4j"                  %  "slf4j-api"       % "1.6.5"  withSources()
 )
 
 seq(StartScriptPlugin.startScriptForClassesSettings: _*)

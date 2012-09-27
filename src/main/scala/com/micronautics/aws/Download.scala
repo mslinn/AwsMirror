@@ -14,7 +14,8 @@
 
 package com.micronautics.aws
 
-import com.micronautics.aws.Main._
+import Main._
+import Util._
 import scala.Some
 
 class Download(args: Array[String]) {
@@ -44,9 +45,9 @@ class Download(args: Array[String]) {
                 println("Error: AWS account %s does not define bucket %s".format(s3File.accountName, s3File.bucketName))
                 sys.exit(-1)
               }
-              Model.credentials = credentials
+              S3Model.credentials = credentials
               Model.bucketName = s3File.bucketName
-              Model.s3 = s3
+              S3Model.s3 = s3
               new Downloader(true).download(file.getParentFile)
           }
       }

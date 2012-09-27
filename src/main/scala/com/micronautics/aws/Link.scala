@@ -15,6 +15,7 @@
 package com.micronautics.aws
 
 import com.micronautics.aws.Main._
+import com.micronautics.aws.Util._
 import java.io.File
 import scala.Some
 

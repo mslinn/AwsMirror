@@ -14,27 +14,16 @@
 
 package com.micronautics.aws
 
-import scalax.file.Path
-import java.io.File
-import com.codahale.jerkson.Json._
-import scala.io.Source
 import akka.actor.ActorSystem
-import scalax.io.Codec
-import org.joda.time.format.DateTimeFormat
+import ch.qos.logback.classic.{Level, Logger}
+import com.amazonaws.services.s3.model.S3ObjectSummary
+import java.io.File
 import org.slf4j.LoggerFactory
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.Logger
-import java.nio.file.Files
-import org.apache.commons.lang.SystemUtils.IS_OS_WINDOWS
 import org.slf4j.Logger.ROOT_LOGGER_NAME
+import collection.JavaConversions._
 
 object Main extends App {
   lazy val system = ActorSystem()
-  lazy val dtFormat = DateTimeFormat.forPattern("HH:mm:ss 'on' mmm, dd YYYY")
-
-  var s3Option: Option[S3] = None
-
-  def credentialPath: Path = Path(new File(sys.env("HOME"))) / ".aws"
 
   override def main(args: Array[String]) {
     if (args.length==0)
@@ -126,15 +115,6 @@ object Main extends App {
     }
   }
 
-  /** @return `.aws` contents as a String */
-  def credentialFileContents: Option[String] = {
-    val file = new File(credentialPath.path)
-    if (file.exists)
-      Some(Source.fromFile(file).mkString)
-    else
-      None
-  }
-
   def help: Unit = {
     println(
       """AwsMirror v0.1.0-SNAPSHOT
@@ -170,107 +150,7 @@ object Main extends App {
   }
 
   /** @return true if bucket exists for given or implicit AWS S3 account credentials */
-  def bucketExists(bucketName: String)(implicit s3: S3): Boolean = s3.listBuckets().contains(bucketName)
-
-  def readS3File(): S3File = {
-    findS3File() match {
-      case None =>
-        null
-
-      case Some(file) =>
-        parseS3File(file)
-    }
-  }
-
-  /**
-    * Walk up from the current directory
-    * @return Some(File) for first `.s3` file found, or None
-    */
-  def findS3File(fileName: String=".s3", directory: File=new File(System.getProperty("user.dir"))): Option[File] = {
-    val file = new File(directory, fileName)
-    if (file.exists()) {
-      Some(file)
-    } else {
-      val parent = directory.getParent
-      if (parent==null)
-        None
-      else
-        findS3File(fileName, new File(parent))
-    }
-  }
-
-  /** @return `Some(S3)` for any `.s3` file found, or None */
-  def findS3: Option[S3] = findS3FileObject match {
-    case None =>
-      None
-
-    case Some(s3File) =>
-      s3Option(s3File.accountName)
-  }
-
-  def s3Option(accountName: String): Option[S3] = {
-    getAuthentication(accountName) match {
-      case None =>
-        None
-
-      case Some(credentials) =>
-        Some(new S3(credentials.accessKey, credentials.secretKey))
-    }
-  }
-
-  /** @return `Some(S3File)` for any `.s3` file found, or None */
-  def findS3FileObject: Option[S3File] = findS3File() match {
-    case None =>
-      None
-
-    case Some(file) =>
-      Some(parseS3File(file))
-  }
-
-  /**
-    * Parse `.aws` file if it exists
-    * @return Some(Credentials) authentication for given accountName, or None
-    */
-  def getAuthentication(accountName: String): Option[Credentials] = {
-    credentialFileContents match {
-      case None =>
-        None
-
-      case Some(contents) =>
-        val creds = AllCredentials(parse[Array[Credentials]](contents)).flatMap { cred =>
-          if (cred.awsAccountName==accountName)
-            Some(cred)
-          else
-            None
-        }
-        if (creds.length==0)
-          None
-        else
-          Some(creds.head)
-    }
-  }
-
-  implicit def s3fileTos3Option(s3File: S3File): Option[S3] = {
-    getAuthentication(s3File.accountName) match {
-      case None =>
-        Main.s3Option = None
-
-      case Some(credentials) =>
-        val s3 = new S3(credentials.accessKey, credentials.secretKey)
-        Main.s3Option = Some(s3)
-    }
-    Main.s3Option
-  }
-
-  /** @return S3File from parsing JSON in given `.s3` file */
-  def parseS3File(file: File): S3File = try {
-    parse[S3File](Path(file).slurpString(Codec.UTF8))
-  } catch {
-    case e =>
-      println("Error parsing " + file.getAbsolutePath + ":\n" + e.getMessage)
-      sys.exit(-2)
-      null
-  }
+  def bucketExists(bucketName: String)(implicit s3: S3): Boolean = s3.bucketExists(bucketName)
 
   /** Interactive prompt/reply */
   def prompt(msg: String, defaultValue: String=null): String = {
@@ -286,38 +166,23 @@ object Main extends App {
       userInput
   }
 
-  def writeS3(contents: String): Unit = {
-    val s3File = new File(System.getProperty("user.dir"), ".s3")
-    val s3Path = Path(s3File)
-    s3Path.write(contents.replaceAll("(.*?:(\\[.*?\\],|.*?,))", "$0\n "))
-    makeFileHiddenIfDos(s3Path)
-  }
-
-  def makeFileHiddenIfDos(path: Path) {
-    if (IS_OS_WINDOWS) {
-      path.fileOption match {
-        case Some(file) =>
-          if (!file.isHidden)
-            Files.setAttribute(file.toPath, "dos:hidden", true)
-
-        case None =>
+  /** @return -2 if s3File does not exist or if there is a read error,
+     *          -1 if s3File is older than local copy,
+     *           0 if same age as local copy,
+     *           1 if remote copy is newer,
+     *           2 if local copy does not exist */
+  def compareS3FileAge(file: File, path: String): Int = {
+    Model.allNodes.foreach { (node: S3ObjectSummary) =>
+      val key: String = node.getKey
+      try {
+        if (key.compareTo(path) == 0)
+          return Util.compareS3FileAge(file, node)
+      } catch {
+        case e: Exception =>
+          System.out.println(e.getMessage() + ": " + key)
+          return S3Model.s3FileDoesNotExist
       }
     }
-  }
-
-  /**
-   * Write `.s3` file
-   * @return String indicating when last synced, if ever synced
-   */
-  def writeS3(newS3File: S3File): String = {
-    val synced = newS3File.lastSyncOption match {
-      case None =>
-        "never synced"
-
-      case Some(dateTime) =>
-        "last synced " + dtFormat.print(dateTime)
-    }
-    writeS3(generate(newS3File) + "\n")
-    synced
+    S3Model.s3FileDoesNotExist
   }
 }
