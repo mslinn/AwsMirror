@@ -31,7 +31,7 @@ resolvers += Resolver.url("sbt-plugin-snapshots",
   new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-snapshots/"))(Resolver.ivyStylePatterns)
 
 libraryDependencies ++= Seq(
-  "com.micronautics"           %  "awss3"           % "0.1.0-SNAPSHOT" withSources(),
+  "com.micronautics"           %  "awss3"           % "0.1.1-SNAPSHOT" withSources(),
   "ch.qos.logback"             %  "logback-classic" % "1.0.6"  withSources(),
   "com.thoughtworks.paranamer" %  "paranamer"       % "2.5"    withSources(),
   "junit"                      %  "junit"           % "4.10"   % "test" withSources(),
