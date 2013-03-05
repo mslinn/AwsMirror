@@ -1,8 +1,8 @@
 import com.typesafe.startscript.StartScriptPlugin
 
-seq(ProguardPlugin.proguardSettings :_*)
+//seq(ProguardPlugin.proguardSettings :_*)
 
-proguardOptions += keepMain("Main")
+//proguardOptions += keepMain("Main")
 
 organization := "com.micronautics"
 
@@ -57,3 +57,4 @@ initialCommands := """
 // Only show warnings and errors on the screen for compilations.
 // This applies to both test:compile and compile and is Info by default
 logLevel in compile := Level.Warn
+
