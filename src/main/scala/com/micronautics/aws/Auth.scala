@@ -19,6 +19,7 @@ import Main._
 import Util._
 import com.codahale.jerkson.Json._
 import org.slf4j.LoggerFactory
+import java.io.FileWriter
 
 class Auth(args: Array[String]) {
   private val logger = LoggerFactory.getLogger(getClass)
@@ -80,7 +81,7 @@ class Auth(args: Array[String]) {
       case Some(contents) =>
         credentials.addAll(parse[Array[Credentials]](contents))
         if (credentials.defines(accountName)) {
-          println("Error: AWS account '%s' already defined in %s".format(accountName, credentialPath.path))
+          println("Error: AWS account '%s' already defined in %s".format(accountName, credentialPath.toAbsolutePath))
           sys.exit(-1)
         }
     }
@@ -99,13 +100,13 @@ class Auth(args: Array[String]) {
     }
     credentialFileContents match {
       case None =>
-        println(".aws file not found in %s".format(credentialPath.path))
+        println(".aws file not found in %s".format(credentialPath.toAbsolutePath))
         sys.exit(-1)
 
       case Some(contents) =>
         val oldCredentials = AllCredentials(parse[Array[Credentials]](contents))
         if (!oldCredentials.defines(accountName)) {
-          println("Error: authorization information for AWS account '%s' is not present in %s".format(accountName, credentialPath.path))
+          println("Error: authorization information for AWS account '%s' is not present in %s".format(accountName, credentialPath.toAbsolutePath))
           sys.exit(-1)
         }
         val newCredentials = oldCredentials.flatMap {
@@ -122,11 +123,11 @@ class Auth(args: Array[String]) {
   def authList: Unit = {
     credentialFileContents match {
       case None =>
-        println(".aws file not found in %s".format(credentialPath.path))
+        println(".aws file not found in %s".format(credentialPath.toAbsolutePath))
         sys.exit(-1)
 
       case Some(contents) =>
-        println("List of AWS credentials in %s".format(credentialPath.path))
+        println("List of AWS credentials in %s".format(credentialPath.toAbsolutePath))
         parse[Array[Credentials]](contents) foreach {
           creds: Credentials =>
             println( """  AWS account name: %s
@@ -146,7 +147,7 @@ class Auth(args: Array[String]) {
     }
     credentialFileContents match {
       case None =>
-        println(".aws file not found in %s".format(credentialPath.path))
+        println(".aws file not found in %s".format(credentialPath.toAbsolutePath))
         sys.exit(-1)
 
       case Some(contents) =>
@@ -175,7 +176,7 @@ class Auth(args: Array[String]) {
   def writeCredentials(credentials: AllCredentials) {
     val generatedCredentials = generate(credentials)
     val prettyPrintedCredentials = generatedCredentials.replaceAll("(.*?:(\\[.*?\\],|.*?,))", "$0\n ") + "\n"
-    credentialPath.write(prettyPrintedCredentials)
+    writeFile(credentialPath.toFile)(prettyPrintedCredentials)
     makeFileHiddenIfDos(credentialPath)
   }
 

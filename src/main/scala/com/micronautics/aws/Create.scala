@@ -19,8 +19,8 @@ import Util._
 
 /** Create a bucket, enabled for a web site with index file index.html */
 class Create(args: Array[String]) {
-  if (!credentialPath.exists) {
-    println("%s not found\nUse 'auth add' subcommand to create".format(credentialPath.path))
+  if (!credentialPath.toFile.exists) {
+    println("%s not found\nUse 'auth add' subcommand to create".format(credentialPath.toAbsolutePath))
     sys.exit(-1)
   }
 
@@ -94,7 +94,7 @@ class Create(args: Array[String]) {
               doit(s3, accountName, bucketName)
               writeS3(S3File(accountName, bucketName, None))
             } catch {
-              case ex =>
+              case ex: Exception =>
                 println(ex.getMessage)
             }
         }

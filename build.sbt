@@ -1,4 +1,4 @@
-import com.typesafe.startscript.StartScriptPlugin
+import com.typesafe.sbt.SbtStartScript
 
 //seq(ProguardPlugin.proguardSettings :_*)
 
@@ -10,9 +10,9 @@ name := "awsmirror"
 
 crossPaths := false
 
-version := "0.1.0-SNAPSHOT"
+version := "0.1.1-SNAPSHOT"
 
-scalaVersion := "2.9.2"
+scalaVersion := "2.10.0"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-encoding", "utf8")
 
@@ -40,7 +40,7 @@ libraryDependencies ++= Seq(
   "org.slf4j"                  %  "slf4j-api"       % "1.6.5"  withSources()
 )
 
-seq(StartScriptPlugin.startScriptForClassesSettings: _*)
+seq(SbtStartScript.startScriptForClassesSettings: _*)
 
 logLevel := Level.Error
 

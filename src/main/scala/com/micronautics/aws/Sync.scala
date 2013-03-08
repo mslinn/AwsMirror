@@ -24,8 +24,8 @@ import scala.collection.JavaConversions._
 /** Uploads on (at least) one thread, downloads on multiple threads */
 class Sync(args: Array[String]) {
   private val logger = LoggerFactory.getLogger(getClass)
-  if (!credentialPath.exists) {
-    println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.path))
+  if (!credentialPath.toFile.exists) {
+    println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.toAbsolutePath))
     sys.exit(-1)
   }
 

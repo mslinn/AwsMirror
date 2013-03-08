@@ -19,8 +19,8 @@ import Util._
 
 /** Delete S3 bucket */
 class Delete(args: Array[String]) {
-  if (!credentialPath.exists) {
-    println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.path))
+  if (!credentialPath.toFile.exists) {
+    println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.toAbsolutePath))
     sys.exit(-1)
   }
 
@@ -45,7 +45,7 @@ class Delete(args: Array[String]) {
                 println("AWS bucket '%s' deleted from account '%s'. %s was not deleted in case you want to recreate the bucket easily with the create subcommand.".
                   format(s3File.bucketName, s3File.accountName, findS3File().get.getCanonicalPath))
               } catch {
-                case e =>
+                case e: Exception =>
                   print("Error deleting '%s' deleted from account '%s'. ".format(s3File.bucketName, s3File.accountName))
                   println(e.getMessage + ".")
               }
@@ -72,7 +72,7 @@ class Delete(args: Array[String]) {
                 println(" \n%s was not deleted in case you want to recreate the bucket with the create subcommand.".format(file.getCanonicalPath))
             }
           } catch {
-            case e=>
+            case e: Exception =>
               print("Error deleting '%s' deleted from account '%s'. ".format(bucketName, accountName))
               println(e.getMessage + ".")
           }

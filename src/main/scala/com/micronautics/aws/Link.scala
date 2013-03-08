@@ -20,8 +20,8 @@ import java.io.File
 import scala.Some
 
 class Link(args: Array[String]) {
-  if (!credentialPath.exists) {
-    println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.path))
+  if (!credentialPath.toFile.exists) {
+    println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.toAbsolutePath))
     sys.exit(-1)
   }
 

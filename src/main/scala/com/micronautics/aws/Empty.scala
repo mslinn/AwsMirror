@@ -18,8 +18,8 @@ import Main._
 import Util._
 
 class Empty(args: Array[String]) {
-  if (!credentialPath.exists) {
-    println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.path))
+  if (!credentialPath.toFile.exists) {
+    println(".aws file not found in %s\nUse 'auth add' subcommand to create".format(credentialPath.toAbsolutePath))
     System.exit(-1)
   }
 

@@ -108,7 +108,7 @@ class Downloader(overwrite: Boolean) {
     try {
       FileUtils.copyInputStreamToFile(s3.downloadFile(bucketName, node.getKey), outFile)
     } catch {
-      case e =>
+      case e: Exception =>
         println(e.getMessage)
         return
     }
